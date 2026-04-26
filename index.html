@@ -117,35 +117,23 @@ footer{text-align:center;margin-top:80px;opacity:.6}
 
 </footer>
 
-</div>
+<section class="section" style="margin-top:60px">
+  <h2>🚀 Impulsa el Ecosistema ROXs</h2>
+  <p>Forma parte del crecimiento de ROXs Coin. El apoyo de la comunidad permite seguir innovando, expandiendo el proyecto y construyendo un futuro sólido dentro de Web3.</p>
+  <p style="margin-top:10px">Cada contribución fortalece el desarrollo, la expansión y la evolución del ecosistema.</p>
 
-<script>
-const canvas=document.getElementById('particles');
-const ctx=canvas.getContext('2d');
-canvas.width=window.innerWidth;
-canvas.height=window.innerHeight;
+  <div style="margin-top:20px">
+    <strong>💰 Aceptamos:</strong>
+    <ul style="margin-top:10px; list-style:none">
+      <li>USDT (Red Polygon)</li>
+      <li>POL (MATIC)</li>
+    </ul>
+  </div>
 
-let particles=[];
-for(let i=0;i<120;i++){
-particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2,dx:(Math.random()-.5),dy:(Math.random()-.5)})}
-
-function draw(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle='#00f0ff';
-particles.forEach(p=>{
-ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
-p.x+=p.dx;p.y+=p.dy;
-if(p.x<0||p.x>canvas.width)p.dx*=-1;
-if(p.y<0||p.y>canvas.height)p.dy*=-1;
-});
-requestAnimationFrame(draw);
-}
-
-draw();
-window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight});
-</script>
-
-</body>
-</html>
-
-
+  <div style="margin-top:20px">
+    <strong>📍 Dirección en Polygon:</strong>
+    <p style="word-break:break-all; margin-top:8px">
+      0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E
+    </p>
+  </div>
+</section>
