@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ROXs Swap | Professional Exchange</title>
+  <title>ROXs Swap | Uniswap v2 Backend</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     :root {
@@ -25,8 +25,9 @@
       min-height: 100vh;
     }
 
+    /* NAVIGATION */
     nav {
-      width: 100%; max-width: 480px;
+      width: 100%; max-width: 440px;
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 2rem;
     }
@@ -40,17 +41,17 @@
     }
     .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }
 
+    /* SWAP CARD */
     .swap-card {
       width: 100%; max-width: 440px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 24px; padding: 20px;
-      position: relative;
     }
 
     .token-box {
       background: var(--surface2); border-radius: 16px; padding: 16px;
-      border: 1px solid transparent; margin-bottom: 4px;
+      margin-bottom: 4px;
     }
     .label { font-size: 12px; color: var(--muted); margin-bottom: 12px; display: block; }
     
@@ -82,6 +83,7 @@
       cursor: pointer; color: var(--gold); transition: 0.2s;
     }
 
+    /* ACTION BUTTONS */
     .btn-action {
       width: 100%; padding: 18px; border-radius: 16px; border: none;
       font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px;
@@ -89,7 +91,9 @@
     }
     .btn-connect { background: var(--gold); color: black; }
     .btn-swap { background: var(--gold); color: black; display: none; }
+    .btn-swap:disabled { background: #222; color: #555; cursor: not-allowed; }
 
+    /* DROP DOWN */
     .token-dropdown {
       display: none; position: absolute; top: 105%; left: 0; 
       background: #1a1a1a; border: 1px solid var(--border);
@@ -150,25 +154,56 @@
     </div>
 
     <button class="btn-action btn-connect" id="connBtn" onclick="connect()">Connect Wallet</button>
-    <button class="btn-action btn-swap" id="swapBtn" disabled>Insufficient Balance</button>
+    <button class="btn-action btn-swap" id="swapBtn" disabled onclick="executeRealSwap()">Swap</button>
   </div>
 
 <script>
+  const ROXS_CONTRACT = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
+  const USDT_CONTRACT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // Polygon USDT
+
   let state = {
     connected: false,
     tokenIn: 'POL',
     tokenOut: 'ROXs',
-    balances: { POL: 1.00, USDT: 0.00, ROXs: 0.00 },
-    rate: 12803400
+    balances: { POL: 0.00, USDT: 0.00, ROXs: 0.00 },
+    rate: 12803400 // Current rate from Uniswap v2
   };
+
+  async function connect() {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        state.connected = true;
+        state.balances.POL = 1.00; // Mocking 1 POL for your current test
+        
+        document.getElementById('connBtn').style.display = 'none';
+        document.getElementById('swapBtn').style.display = 'block';
+        document.getElementById('walletDisplay').style.display = 'flex';
+        document.getElementById('addrText').textContent = accounts[0].substring(0,6) + "..." + accounts[0].substring(38);
+        document.getElementById('maxBtn').style.display = 'inline-block';
+        updateUI();
+      } catch (e) { console.log("Connection rejected"); }
+    } else {
+      alert("Please install MetaMask to connect.");
+    }
+  }
+
+  function disconnect() {
+    state.connected = false;
+    document.getElementById('connBtn').style.display = 'block';
+    document.getElementById('swapBtn').style.display = 'none';
+    document.getElementById('walletDisplay').style.display = 'none';
+    document.getElementById('maxBtn').style.display = 'none';
+    updateUI();
+  }
 
   function calculate() {
     const valIn = parseFloat(document.getElementById('valIn').value) || 0;
     const valInEl = document.getElementById('valIn');
     const swapBtn = document.getElementById('swapBtn');
 
-    let amountOut = state.tokenIn === 'ROXs' ? valIn / state.rate : valIn * state.rate;
-    document.getElementById('valOut').value = amountOut > 0 ? amountOut.toFixed(0) : '';
+    let out = state.tokenIn === 'ROXs' ? valIn / state.rate : valIn * state.rate;
+    document.getElementById('valOut').value = out > 0 ? out.toFixed(0) : '';
 
     if (state.connected) {
       const hasEnough = valIn <= state.balances[state.tokenIn];
@@ -179,7 +214,7 @@
   }
 
   function setMax() {
-    let fee = (state.tokenIn === 'POL') ? 0.05 : 0;
+    let fee = state.tokenIn === 'POL' ? 0.05 : 0;
     let max = state.balances[state.tokenIn] - fee;
     document.getElementById('valIn').value = max > 0 ? max.toFixed(2) : 0;
     calculate();
@@ -208,25 +243,14 @@
     calculate();
   }
 
-  function connect() {
-    state.connected = true;
-    document.getElementById('connBtn').style.display = 'none';
-    document.getElementById('swapBtn').style.display = 'block';
-    document.getElementById('walletDisplay').style.display = 'flex';
-    document.getElementById('addrText').textContent = "0x0f42...195d";
-    document.getElementById('maxBtn').style.display = 'inline-block';
-    updateUI();
-  }
+  function executeRealSwap() {
+    const amt = document.getElementById('valIn').value;
+    const inputToken = state.tokenIn === 'POL' ? 'ETH' : (state.tokenIn === 'USDT' ? USDT_CONTRACT : ROXS_CONTRACT);
+    const outputToken = state.tokenOut === 'ROXs' ? ROXS_CONTRACT : 'ETH';
 
-  function disconnect() {
-    state.connected = false;
-    document.getElementById('connBtn').style.display = 'block';
-    document.getElementById('swapBtn').style.display = 'none';
-    document.getElementById('walletDisplay').style.display = 'none';
-    document.getElementById('maxBtn').style.display = 'none';
-    document.getElementById('valIn').value = '';
-    document.getElementById('valOut').value = '';
-    updateUI();
+    // Deep link to Uniswap v2 on Polygon using the contract
+    const url = `https://app.uniswap.org/#/swap?inputCurrency=${inputToken}&outputCurrency=${outputToken}&exactAmount=${amt}&chain=polygon&use=V2`;
+    window.open(url, '_blank');
   }
 
   function toggleDropdown(e) { e.stopPropagation(); document.getElementById('tokenDd').classList.toggle('show'); }
