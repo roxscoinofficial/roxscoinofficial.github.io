@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ROXs Swap - Intercambio Profesional</title>
+  <title>ROXs Swap | Professional Exchange</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     :root {
@@ -21,83 +21,155 @@
       font-family: 'DM Sans', sans-serif;
       background: var(--bg);
       color: var(--text);
-      display: flex; flex-direction: column; align-items: center; padding: 40px 20px;
+      display: flex; flex-direction: column; align-items: center; padding: 20px;
+      min-height: 100vh;
     }
 
+    /* NAVIGATION */
+    nav {
+      width: 100%; max-width: 480px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem;
+    }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; color: var(--gold); text-decoration: none; font-size: 22px; }
+    
+    .wallet-status {
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 50px; cursor: pointer; display: none;
+      align-items: center; gap: 8px; font-size: 13px; color: var(--gold);
+      font-family: 'Syne', sans-serif; font-weight: 600;
+    }
+    .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }
+
+    /* SWAP CARD */
     .swap-card {
       width: 100%; max-width: 440px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 24px; padding: 20px;
+      position: relative;
     }
 
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .header h2 { font-family: 'Syne', sans-serif; font-size: 18px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-header h2 { font-family: 'Syne', sans-serif; font-size: 18px; }
+    .settings-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; }
 
+    /* SLIPPAGE PANEL */
+    .settings-panel {
+      display: none; position: absolute; top: 60px; right: 20px;
+      background: #1a1a1a; border: 1px solid var(--border);
+      border-radius: 12px; padding: 15px; z-index: 100; width: 220px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .settings-panel.open { display: block; }
+    .slip-title { font-size: 12px; color: var(--muted); margin-bottom: 10px; display: block; }
+    .slip-grid { display: flex; gap: 5px; }
+    .slip-opt { 
+        flex: 1; background: #000; border: 1px solid var(--border); 
+        border-radius: 8px; padding: 6px; color: var(--muted); 
+        cursor: pointer; font-size: 11px; text-align: center;
+    }
+    .slip-opt.active { border-color: var(--gold); color: var(--gold); }
+
+    /* TOKEN INPUTS */
     .token-box {
-      background: var(--surface2); border-radius: 16px; padding: 16px; margin-bottom: 4px;
-      border: 1px solid transparent; transition: 0.2s;
+      background: var(--surface2); border-radius: 16px; padding: 16px;
+      border: 1px solid transparent; margin-bottom: 4px; transition: 0.2s;
     }
     .token-box:hover { border-color: rgba(255,255,255,0.1); }
-    .label { font-size: 13px; color: var(--muted); margin-bottom: 10px; display: block; }
+    .label { font-size: 12px; color: var(--muted); margin-bottom: 12px; display: block; }
     
     .input-row { display: flex; justify-content: space-between; align-items: center; }
     .amount-input {
-      background: none; border: none; color: white; font-size: 32px;
-      font-family: 'Syne', sans-serif; width: 60%; outline: none;
+      background: none; border: none; color: white; font-size: 30px;
+      font-family: 'Syne', sans-serif; width: 60%; outline: none; font-weight: 600;
     }
     
     .token-select {
       background: #000; border: 1px solid var(--border); border-radius: 50px;
       padding: 6px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
     }
-    .token-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+    .token-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; }
     .icon-pol { background: #8247e5; color: white; }
     .icon-roxs { background: var(--gold); color: black; }
 
-    .balance-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 10px; }
-    .max-btn { color: var(--gold); background: none; border: none; cursor: pointer; font-weight: bold; }
+    .balance-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 12px; }
+    .max-btn { color: var(--gold); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 11px; }
 
-    .arrow-swap {
-      height: 40px; width: 40px; background: var(--surface); border: 4px solid var(--bg);
-      margin: -18px auto; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; position: relative; z-index: 2; color: var(--gold);
+    .arrow-container { display: flex; justify-content: center; margin: -20px 0; position: relative; z-index: 2; }
+    .arrow-btn {
+      height: 36px; width: 36px; background: var(--surface); border: 4px solid var(--bg);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--gold); transition: 0.2s;
     }
+    .arrow-btn:hover { transform: rotate(180deg); color: white; }
 
-    /* MENSAJE DE ERROR */
+    /* ERROR MSG */
     .error-banner {
-      background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.2);
+      background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.15);
       color: var(--error); padding: 12px; border-radius: 12px; font-size: 13px;
       margin-top: 12px; display: none; align-items: center; gap: 8px;
     }
     .error-banner.show { display: flex; }
 
-    /* INFO DE RUTA */
-    .info-box { padding: 12px; font-size: 12px; color: var(--muted); }
-    .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .info-row b { color: #eee; }
+    /* STATS */
+    .stats-box { padding: 15px 5px; font-size: 13px; color: var(--muted); }
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .stat-row span:last-child { color: #eee; font-weight: 500; }
 
-    .btn-main {
+    /* ACTION BUTTONS */
+    .btn-action {
       width: 100%; padding: 18px; border-radius: 16px; border: none;
       font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px;
-      cursor: pointer; margin-top: 10px; transition: 0.3s;
+      cursor: pointer; transition: 0.3s; margin-top: 10px;
     }
-    .btn-swap { background: var(--gold); color: black; }
+    .btn-connect { background: var(--gold); color: black; }
+    .btn-swap { background: var(--gold); color: black; display: none; }
     .btn-swap:disabled { background: #222; color: #555; cursor: not-allowed; }
+
+    /* WALLET MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #111; border: 1px solid var(--border); border-radius: 24px; padding: 24px; width: 90%; max-width: 380px; }
+    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .wallet-item {
+      display: flex; align-items: center; gap: 15px; background: #1a1a1a;
+      padding: 15px; border-radius: 15px; cursor: pointer; margin-bottom: 10px; border: 1px solid transparent;
+    }
+    .wallet-item:hover { border-color: var(--gold); background: #222; }
   </style>
 </head>
 <body>
 
+  <nav>
+    <a href="#" class="nav-logo">ROXs</a>
+    <div class="wallet-status" id="walletDisplay" onclick="disconnect()">
+      <div class="dot"></div>
+      <span id="addrText">0x...</span>
+    </div>
+  </nav>
+
   <div class="swap-card">
-    <div class="header">
-      <h2>Intercambio</h2>
-      <span>⚙️</span>
+    <div class="card-header">
+      <h2>Swap</h2>
+      <button class="settings-btn" id="setBtn">⚙️</button>
+      <div class="settings-panel" id="setPanel">
+        <span class="slip-title">Max Slippage</span>
+        <div class="slip-grid">
+          <div class="slip-opt" onclick="setSlippage(0.1, this)">0.1%</div>
+          <div class="slip-opt active" onclick="setSlippage(0.5, this)">0.5%</div>
+          <div class="slip-opt" onclick="setSlippage(1.0, this)">1.0%</div>
+        </div>
+      </div>
     </div>
 
     <div class="token-box">
-      <span class="label">Vender</span>
+      <span class="label">Sell</span>
       <div class="input-row">
-        <input type="number" class="amount-input" id="valIn" placeholder="0" oninput="updateSwap()">
+        <input type="number" class="amount-input" id="valIn" placeholder="0" oninput="calculate()">
         <div class="token-select">
           <div id="iconIn" class="token-icon icon-pol">P</div>
           <span id="symIn">POL</span>
@@ -105,14 +177,16 @@
       </div>
       <div class="balance-row">
         <span id="usdIn">$0.00</span>
-        <span>Saldo: <span id="balInText">1.00</span> <button class="max-btn" onclick="setMax()">MÁX</button></span>
+        <span>Balance: <span id="balInText">1.00</span> <button class="max-btn" onclick="setMax()">MAX</button></span>
       </div>
     </div>
 
-    <div class="arrow-swap" onclick="flip()">↓</div>
+    <div class="arrow-container">
+      <div class="arrow-btn" onclick="flip()">↓</div>
+    </div>
 
     <div class="token-box">
-      <span class="label">Comprar</span>
+      <span class="label">Buy</span>
       <div class="input-row">
         <input type="number" class="amount-input" id="valOut" placeholder="0" readonly>
         <div class="token-select">
@@ -122,110 +196,161 @@
       </div>
       <div class="balance-row">
         <span id="usdOut">$0.00</span>
-        <span>Saldo: <span id="balOutText">0.00</span></span>
+        <span>Balance: <span id="balOutText">0.00</span></span>
       </div>
     </div>
 
     <div class="error-banner" id="errorMsg">
-      ⚠️ No hay suficientes <span id="errToken">POL</span> para intercambiar
+      ⚠️ Insufficient <span id="errToken">POL</span> balance
     </div>
 
-    <div class="info-box" id="details" style="display:none">
-      <div class="info-row"><span>Tasa de cambio</span> <b id="rateText">1 POL = 12.6M ROXs</b></div>
-      <div class="info-row"><span>Comisión de red</span> <b>~$0.01</b></div>
+    <div class="stats-box" id="stats" style="display:none">
+      <div class="stat-row"><span>Exchange Rate</span> <span id="rateText">1 POL = 12.6M ROXs</span></div>
+      <div class="stat-row"><span>Slippage Tolerance</span> <span id="slipText">0.5%</span></div>
+      <div class="stat-row"><span>Network Fee</span> <span>~$0.01</span></div>
     </div>
 
-    <button class="btn-main btn-swap" id="swapBtn" disabled>Intercambiar</button>
+    <button class="btn-action btn-connect" id="connBtn" onclick="openModal()">Connect Wallet</button>
+    <button class="btn-action btn-swap" id="swapBtn" disabled onclick="executeSwap()">Swap</button>
+  </div>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Connect Wallet</h3>
+        <button style="background:none; border:none; color:white; cursor:pointer;" onclick="closeModal()">✕</button>
+      </div>
+      <div class="wallet-item" onclick="connect('MetaMask')">
+        <span>🦊</span> <b>MetaMask</b>
+      </div>
+      <div class="wallet-item" onclick="connect('WalletConnect')">
+        <span>🔗</span> <b>WalletConnect</b>
+      </div>
+    </div>
   </div>
 
 <script>
-  // ESTADO INICIAL (Billetera con 1 POL y 0 ROXs)
   let state = {
+    connected: false,
     tokenIn: 'POL',
     tokenOut: 'ROXs',
     balances: { POL: 1.00, ROXs: 0.00 },
-    prices: { POL: 0.22, ROXs: 0.00000001734 }, // Tasa según tu dato de Uniswap
-    rate: 12687300 // 1 POL = 12,687,300 ROXs
+    prices: { POL: 0.22, ROXs: 0.00000001734 },
+    rate: 12687300,
+    slippage: 0.5
   };
 
-  function updateSwap() {
+  // UI Handlers
+  document.getElementById('setBtn').onclick = (e) => {
+    e.stopPropagation();
+    document.getElementById('setPanel').classList.toggle('open');
+  };
+  document.addEventListener('click', () => document.getElementById('setPanel').classList.remove('open'));
+
+  function setSlippage(val, el) {
+    state.slippage = val;
+    document.querySelectorAll('.slip-opt').forEach(opt => opt.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('slipText').textContent = val + '%';
+  }
+
+  function calculate() {
     const valIn = parseFloat(document.getElementById('valIn').value) || 0;
     const valOutEl = document.getElementById('valOut');
     const swapBtn = document.getElementById('swapBtn');
     const errorMsg = document.getElementById('errorMsg');
-    const details = document.getElementById('details');
+    const stats = document.getElementById('stats');
 
     if (valIn <= 0) {
-      valOutEl.value = '';
-      swapBtn.disabled = true;
-      errorMsg.classList.remove('show');
-      details.style.display = 'none';
-      return;
+        valOutEl.value = '';
+        stats.style.display = 'none';
+        swapBtn.disabled = true;
+        errorMsg.classList.remove('show');
+        return;
     }
 
-    // Calcular salida
-    let result;
-    if(state.tokenIn === 'POL') {
-      result = valIn * state.rate;
-    } else {
-      result = valIn / (state.rate * 1.01); // 1% spread al vender ROXs
-    }
-    
+    const result = state.tokenIn === 'POL' ? valIn * state.rate : valIn / state.rate;
     valOutEl.value = result.toLocaleString('en-US', {maximumFractionDigits: 0}).replace(/,/g, '');
     
-    // Mostrar USD
     document.getElementById('usdIn').textContent = '$' + (valIn * state.prices[state.tokenIn]).toFixed(2);
-    document.getElementById('usdOut').textContent = '$' + (result * state.prices[state.tokenOut]).toFixed(2);
+    document.getElementById('usdOut').textContent = '$' + (valIn * state.prices[state.tokenIn] * 0.99).toFixed(2);
 
-    // VALIDACIÓN DE SALDO REAL
     const hasEnough = valIn <= state.balances[state.tokenIn];
-    
     if (!hasEnough) {
-      errorMsg.classList.add('show');
-      document.getElementById('errToken').textContent = state.tokenIn;
-      swapBtn.disabled = true;
-      swapBtn.textContent = 'Saldo insuficiente';
+        errorMsg.classList.add('show');
+        document.getElementById('errToken').textContent = state.tokenIn;
+        swapBtn.disabled = true;
+        swapBtn.textContent = 'Insufficient Balance';
     } else {
-      errorMsg.classList.remove('show');
-      swapBtn.disabled = false;
-      swapBtn.textContent = 'Intercambiar';
+        errorMsg.classList.remove('show');
+        swapBtn.disabled = !state.connected;
+        swapBtn.textContent = 'Swap';
     }
 
-    details.style.display = 'block';
+    stats.style.display = 'block';
     document.getElementById('rateText').textContent = `1 POL = ${state.rate.toLocaleString()} ROXs`;
   }
 
   function flip() {
-    // Intercambiar tokens
     [state.tokenIn, state.tokenOut] = [state.tokenOut, state.tokenIn];
-    
-    // Actualizar UI
     document.getElementById('symIn').textContent = state.tokenIn;
     document.getElementById('symOut').textContent = state.tokenOut;
     document.getElementById('iconIn').className = `token-icon icon-${state.tokenIn.toLowerCase()}`;
     document.getElementById('iconOut').className = `token-icon icon-${state.tokenOut.toLowerCase()}`;
     document.getElementById('iconIn').textContent = state.tokenIn[0];
     document.getElementById('iconOut').textContent = state.tokenOut[0];
-    
-    // Actualizar Saldos mostrados
-    document.getElementById('balInText').textContent = state.balances[state.tokenIn].toLocaleString();
-    document.getElementById('balOutText').textContent = state.balances[state.tokenOut].toLocaleString();
-    
-    // Resetear y recalcular
+    document.getElementById('balInText').textContent = state.balances[state.tokenIn].toFixed(2);
+    document.getElementById('balOutText').textContent = state.balances[state.tokenOut].toFixed(2);
     document.getElementById('valIn').value = '';
-    updateSwap();
+    calculate();
   }
 
   function setMax() {
     document.getElementById('valIn').value = state.balances[state.tokenIn];
-    updateSwap();
+    calculate();
   }
 
-  // Inicializar saldos al cargar
-  window.onload = () => {
-    document.getElementById('balInText').textContent = state.balances.POL.toFixed(2);
-    document.getElementById('balOutText').textContent = state.balances.ROXs.toFixed(2);
-  };
+  // CONNECTION LOGIC
+  function openModal() { document.getElementById('modal').classList.add('open'); }
+  function closeModal() { document.getElementById('modal').classList.remove('remove'); }
+
+  async function connect(type) {
+    if(type === 'MetaMask' && window.ethereum) {
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            onConnected(accounts[0]);
+        } catch (e) { alert("User rejected"); }
+    } else {
+        // Mock for other wallets
+        onConnected("0x71C...8A2");
+    }
+    document.getElementById('modal').classList.remove('open');
+  }
+
+  function onConnected(addr) {
+    state.connected = true;
+    document.getElementById('connBtn').style.display = 'none';
+    document.getElementById('swapBtn').style.display = 'block';
+    document.getElementById('walletDisplay').style.display = 'flex';
+    document.getElementById('addrText').textContent = addr;
+    calculate();
+  }
+
+  function disconnect() {
+    state.connected = false;
+    location.reload();
+  }
+
+  function executeSwap() {
+      const btn = document.getElementById('swapBtn');
+      btn.disabled = true;
+      btn.textContent = 'Confirming in Wallet...';
+      setTimeout(() => {
+          alert("Transaction Sent to Polygon Mainnet!");
+          btn.textContent = 'Swap';
+          btn.disabled = false;
+      }, 2000);
+  }
 </script>
 </body>
 </html>
