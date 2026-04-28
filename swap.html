@@ -1,294 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ROXs Swap</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ROXs Swap | Uniswap v2 Backend</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --gold: #F0C040;
+      --bg: #050505;
+      --surface: #0f0f0f;
+      --surface2: #161616;
+      --border: rgba(255,255,255,0.08);
+      --text: #ffffff;
+      --muted: #888;
+      --error-alt: #ff0000; 
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex; flex-direction: column; align-items: center; padding: 20px;
+      min-height: 100vh;
+    }
 
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+    /* NAVIGATION */
+    nav {
+      width: 100%; max-width: 440px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem;
+    }
+    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; color: var(--gold); text-decoration: none; font-size: 22px; }
+    
+    .wallet-status {
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 50px; cursor: pointer; display: none;
+      align-items: center; gap: 8px; font-size: 13px; color: var(--gold);
+      font-family: 'Syne', sans-serif; font-weight: 600;
+    }
+    .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }
 
-<style>
-:root{
-  --gold:#F0C040;
-  --bg:#050505;
-  --surface:#0f0f0f;
-  --surface2:#161616;
-  --border:rgba(255,255,255,0.08);
-  --muted:#888;
-  --error:#ff3b3b;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{
-  background:var(--bg);
-  color:white;
-  font-family:'DM Sans';
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding:20px;
-}
+    /* SWAP CARD */
+    .swap-card {
+      width: 100%; max-width: 440px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px; padding: 20px;
+    }
 
-/* NAV */
-nav{
-  width:100%;max-width:440px;
-  display:flex;justify-content:space-between;
-  margin-bottom:20px;
-}
-.nav-logo{
-  font-family:'Syne';
-  font-weight:800;
-  color:var(--gold);
-  font-size:22px;
-}
+    .token-box {
+      background: var(--surface2); border-radius: 16px; padding: 16px;
+      margin-bottom: 4px;
+    }
+    .label { font-size: 12px; color: var(--muted); margin-bottom: 12px; display: block; }
+    
+    .input-row { display: flex; justify-content: space-between; align-items: center; }
+    .amount-input {
+      background: none; border: none; color: white; font-size: 30px;
+      font-family: 'Syne', sans-serif; width: 60%; outline: none; font-weight: 600;
+    }
+    .amount-input.red-text { color: var(--error-alt) !important; }
+    
+    .token-select {
+      background: #000; border: 1px solid var(--border); border-radius: 50px;
+      padding: 6px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+      position: relative;
+    }
+    .token-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; }
+    .icon-pol { background: #8247e5; color: white; }
+    .icon-usdt { background: #26a17b; color: white; }
+    .icon-roxs { background: var(--gold); color: black; }
 
-/* CARD */
-.swap-card{
-  width:100%;max-width:440px;
-  background:var(--surface);
-  border-radius:24px;
-  padding:20px;
-  border:1px solid var(--border);
-}
+    .balance-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 12px; }
+    .balance-red { color: var(--error-alt); }
+    .max-btn { color: var(--gold); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 11px; }
 
-/* TOKEN BOX */
-.token-box{
-  background:var(--surface2);
-  padding:16px;
-  border-radius:16px;
-  margin-bottom:6px;
-}
-.label{
-  font-size:12px;
-  color:var(--muted);
-  margin-bottom:10px;
-}
+    .arrow-container { display: flex; justify-content: center; margin: -20px 0; position: relative; z-index: 2; }
+    .arrow-btn {
+      height: 36px; width: 36px; background: var(--surface); border: 4px solid var(--bg);
+      border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--gold); transition: 0.2s;
+    }
 
-.input-row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+    /* ACTION BUTTONS */
+    .btn-action {
+      width: 100%; padding: 18px; border-radius: 16px; border: none;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px;
+      cursor: pointer; transition: 0.3s; margin-top: 10px;
+    }
+    .btn-connect { background: var(--gold); color: black; }
+    .btn-swap { background: var(--gold); color: black; display: none; }
+    .btn-swap:disabled { background: #222; color: #555; cursor: not-allowed; }
 
-.amount-input{
-  background:none;
-  border:none;
-  color:white;
-  font-size:32px;
-  font-family:'Syne';
-  width:60%;
-  outline:none;
-}
-
-.red{color:var(--error)!important}
-
-.token-select{
-  background:black;
-  border:1px solid var(--border);
-  border-radius:50px;
-  padding:6px 12px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  cursor:pointer;
-}
-
-.token-icon{
-  width:24px;height:24px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:11px;
-  font-weight:bold;
-}
-.icon-pol{background:#8247e5}
-.icon-usdt{background:#26a17b}
-.icon-roxs{background:var(--gold);color:black}
-
-.balance-row{
-  display:flex;
-  justify-content:space-between;
-  font-size:12px;
-  color:var(--muted);
-  margin-top:10px;
-}
-.balance-red{color:var(--error)}
-
-.max{
-  color:var(--gold);
-  cursor:pointer;
-  margin-left:8px;
-  font-weight:bold;
-}
-
-/* ARROW */
-.arrow{
-  display:flex;
-  justify-content:center;
-  margin:-18px 0;
-}
-.arrow button{
-  background:var(--surface);
-  border:4px solid var(--bg);
-  border-radius:10px;
-  width:36px;height:36px;
-  color:var(--gold);
-  cursor:pointer;
-}
-
-/* BUTTON */
-.btn{
-  width:100%;
-  padding:16px;
-  border-radius:16px;
-  border:none;
-  margin-top:10px;
-  font-family:'Syne';
-  font-weight:700;
-  cursor:pointer;
-}
-.connect{background:var(--gold);color:black}
-.swap{background:#222;color:#555}
-.swap.active{background:var(--gold);color:black}
-</style>
+    /* DROP DOWN */
+    .token-dropdown {
+      display: none; position: absolute; top: 105%; left: 0; 
+      background: #1a1a1a; border: 1px solid var(--border);
+      border-radius: 12px; width: 120px; z-index: 10;
+    }
+    .token-dropdown.show { display: block; }
+    .dd-item { padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .dd-item:hover { background: #252525; }
+  </style>
 </head>
-
 <body>
 
-<nav>
-<div class="nav-logo">ROXs</div>
-</nav>
+  <nav>
+    <a href="#" class="nav-logo">ROXs</a>
+    <div class="wallet-status" id="walletDisplay" onclick="disconnect()">
+      <div class="dot"></div>
+      <span id="addrText">0x...</span>
+    </div>
+  </nav>
 
-<div class="swap-card">
+  <div class="swap-card">
+    <div class="token-box">
+      <span class="label">Sell</span>
+      <div class="input-row">
+        <input type="number" class="amount-input" id="valIn" placeholder="0" oninput="calculate()">
+        <div class="token-select" onclick="toggleDropdown(event)">
+          <div id="iconIn" class="token-icon icon-pol">P</div>
+          <span id="symIn">POL</span> <small>▼</small>
+          <div class="token-dropdown" id="tokenDd">
+            <div class="dd-item" onclick="selectToken('POL')">POL</div>
+            <div class="dd-item" onclick="selectToken('USDT')">USDT</div>
+          </div>
+        </div>
+      </div>
+      <div class="balance-row">
+        <span>$0.00</span>
+        <span>Balance: <span id="balInText">0.00</span> <button class="max-btn" id="maxBtn" onclick="setMax()" style="display:none">MAX</button></span>
+      </div>
+    </div>
 
-<!-- SELL -->
-<div class="token-box">
-<div class="label">Vender</div>
+    <div class="arrow-container">
+      <div class="arrow-btn" onclick="flip()">↓</div>
+    </div>
 
-<div class="input-row">
-<input id="valIn" class="amount-input" placeholder="0" oninput="calc()">
+    <div class="token-box">
+      <span class="label">Buy</span>
+      <div class="input-row">
+        <input type="number" class="amount-input" id="valOut" placeholder="0" readonly>
+        <div class="token-select">
+          <div id="iconOut" class="token-icon icon-roxs">R</div>
+          <span id="symOut">ROXs</span>
+        </div>
+      </div>
+      <div class="balance-row">
+        <span>$0.00</span>
+        <span>Balance: <span id="balOutText">0.00</span></span>
+      </div>
+    </div>
 
-<div class="token-select" onclick="toggleToken()">
-<div id="iconIn" class="token-icon icon-pol">P</div>
-<span id="symIn">POL</span>
-</div>
-</div>
-
-<div class="balance-row">
-<span>$0.00</span>
-<span>
-Balance: <span id="balIn">0</span>
-<span class="max" onclick="setMax()">MAX</span>
-</span>
-</div>
-</div>
-
-<!-- ARROW -->
-<div class="arrow">
-<button onclick="flip()">↓</button>
-</div>
-
-<!-- BUY -->
-<div class="token-box">
-<div class="label">Comprar</div>
-
-<div class="input-row">
-<input id="valOut" class="amount-input" readonly>
-<div class="token-select">
-<div class="token-icon icon-roxs">R</div>
-ROXs
-</div>
-</div>
-</div>
-
-<button id="btn" class="btn swap">Enter amount</button>
-
-</div>
+    <button class="btn-action btn-connect" id="connBtn" onclick="connect()">Connect Wallet</button>
+    <button class="btn-action btn-swap" id="swapBtn" disabled onclick="executeRealSwap()">Swap</button>
+  </div>
 
 <script>
-const ROXS = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
-const USDT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+  const ROXS_CONTRACT = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
+  const USDT_CONTRACT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // Polygon USDT
 
-let state={
-  tokenIn:"POL",
-  balance:{POL:1.25,USDT:250,ROXs:0},
+  let state = {
+    connected: false,
+    tokenIn: 'POL',
+    tokenOut: 'ROXs',
+    balances: { POL: 0.00, USDT: 0.00, ROXs: 0.00 },
+    rate: 12803400 // Current rate from Uniswap v2
+  };
 
-  rate:{
-    POL:12803400,
-    USDT:13500000
-  }
-}
-
-// CALCULO
-function calc(){
-  let val=parseFloat(valIn.value)||0
-  let bal=state.balance[state.tokenIn]
-  let rate=state.rate[state.tokenIn]
-
-  let out=val*rate
-  valOut.value=out?Math.floor(out).toLocaleString():""
-
-  valIn.classList.remove("red")
-
-  if(val<=0){
-    btn.innerText="Enter amount"
-    btn.classList.remove("active")
-    return
-  }
-
-  if(val>bal){
-    valIn.classList.add("red")
-    btn.innerText=`No hay suficientes ${state.tokenIn}`
-    btn.classList.remove("active")
-  }else{
-    btn.innerText="Swap"
-    btn.classList.add("active")
-  }
-}
-
-// MAX
-function setMax(){
-  let val=state.balance[state.tokenIn]
-
-  if(state.tokenIn==="POL"){
-    val -= 0.01 // gas estimado
+  async function connect() {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        state.connected = true;
+        state.balances.POL = 1.00; // Mocking 1 POL for your current test
+        
+        document.getElementById('connBtn').style.display = 'none';
+        document.getElementById('swapBtn').style.display = 'block';
+        document.getElementById('walletDisplay').style.display = 'flex';
+        document.getElementById('addrText').textContent = accounts[0].substring(0,6) + "..." + accounts[0].substring(38);
+        document.getElementById('maxBtn').style.display = 'inline-block';
+        updateUI();
+      } catch (e) { console.log("Connection rejected"); }
+    } else {
+      alert("Please install MetaMask to connect.");
+    }
   }
 
-  valIn.value=val.toFixed(4)
-  calc()
-}
-
-// CAMBIAR TOKEN
-function flip(){
-  if(state.tokenIn==="POL"){
-    state.tokenIn="USDT"
-    symIn.innerText="USDT"
-    iconIn.className="token-icon icon-usdt"
-  }else{
-    state.tokenIn="POL"
-    symIn.innerText="POL"
-    iconIn.className="token-icon icon-pol"
+  function disconnect() {
+    state.connected = false;
+    document.getElementById('connBtn').style.display = 'block';
+    document.getElementById('swapBtn').style.display = 'none';
+    document.getElementById('walletDisplay').style.display = 'none';
+    document.getElementById('maxBtn').style.display = 'none';
+    updateUI();
   }
-  calc()
-}
 
-function toggleToken(){ flip() }
+  function calculate() {
+    const valIn = parseFloat(document.getElementById('valIn').value) || 0;
+    const valInEl = document.getElementById('valIn');
+    const swapBtn = document.getElementById('swapBtn');
 
-// SWAP → UNISWAP
-btn.onclick = () => {
-  let val = valIn.value
-  if(!val || btn.classList.contains("swap") && !btn.classList.contains("active")) return
+    let out = state.tokenIn === 'ROXs' ? valIn / state.rate : valIn * state.rate;
+    document.getElementById('valOut').value = out > 0 ? out.toFixed(0) : '';
 
-  let input =
-    state.tokenIn === "POL"
-      ? "ETH"
-      : USDT
+    if (state.connected) {
+      const hasEnough = valIn <= state.balances[state.tokenIn];
+      valInEl.classList.toggle('red-text', !hasEnough);
+      swapBtn.disabled = !hasEnough || valIn <= 0;
+      swapBtn.textContent = hasEnough ? 'Swap' : `Insufficient ${state.tokenIn} balance`;
+    }
+  }
 
-  let url = `https://app.uniswap.org/#/swap?inputCurrency=${input}&outputCurrency=${ROXS}&exactAmount=${val}&chain=polygon`
+  function setMax() {
+    let fee = state.tokenIn === 'POL' ? 0.05 : 0;
+    let max = state.balances[state.tokenIn] - fee;
+    document.getElementById('valIn').value = max > 0 ? max.toFixed(2) : 0;
+    calculate();
+  }
 
-  window.open(url,"_blank")
-}
+  function flip() {
+    [state.tokenIn, state.tokenOut] = [state.tokenOut, state.tokenIn];
+    document.getElementById('symIn').textContent = state.tokenIn;
+    document.getElementById('symOut').textContent = state.tokenOut;
+    document.getElementById('iconIn').className = `token-icon icon-${state.tokenIn.toLowerCase()}`;
+    document.getElementById('iconOut').className = `token-icon icon-${state.tokenOut.toLowerCase()}`;
+    updateUI();
+  }
+
+  function selectToken(t) {
+    state.tokenIn = t;
+    document.getElementById('symIn').textContent = t;
+    document.getElementById('iconIn').className = `token-icon icon-${t.toLowerCase()}`;
+    updateUI();
+  }
+
+  function updateUI() {
+    document.getElementById('balInText').textContent = state.connected ? state.balances[state.tokenIn] : "0.00";
+    document.getElementById('balOutText').textContent = state.connected ? state.balances[state.tokenOut] : "0.00";
+    document.getElementById('balInText').classList.toggle('balance-red', state.connected && state.balances[state.tokenIn] === 0);
+    calculate();
+  }
+
+  function executeRealSwap() {
+    const amt = document.getElementById('valIn').value;
+    const inputToken = state.tokenIn === 'POL' ? 'ETH' : (state.tokenIn === 'USDT' ? USDT_CONTRACT : ROXS_CONTRACT);
+    const outputToken = state.tokenOut === 'ROXs' ? ROXS_CONTRACT : 'ETH';
+
+    // Deep link to Uniswap v2 on Polygon using the contract
+    const url = `https://app.uniswap.org/#/swap?inputCurrency=${inputToken}&outputCurrency=${outputToken}&exactAmount=${amt}&chain=polygon&use=V2`;
+    window.open(url, '_blank');
+  }
+
+  function toggleDropdown(e) { e.stopPropagation(); document.getElementById('tokenDd').classList.toggle('show'); }
+  window.onclick = () => { document.getElementById('tokenDd').classList.remove('show'); };
 </script>
-
 </body>
 </html>
