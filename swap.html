@@ -14,7 +14,6 @@
       --border: rgba(255,255,255,0.08);
       --text: #ffffff;
       --muted: #888;
-      --error: #ff4d4d;
       --error-alt: #ff0000; 
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,29 +48,9 @@
       position: relative;
     }
 
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .card-header h2 { font-family: 'Syne', sans-serif; font-size: 18px; }
-    .settings-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; }
-
-    .settings-panel {
-      display: none; position: absolute; top: 60px; right: 20px;
-      background: #1a1a1a; border: 1px solid var(--border);
-      border-radius: 12px; padding: 15px; z-index: 100; width: 240px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-    .settings-panel.open { display: block; }
-    .slip-title { font-size: 12px; color: var(--muted); margin-bottom: 10px; display: block; }
-    .slip-grid { display: flex; gap: 5px; }
-    .slip-opt { 
-        flex: 1; background: #000; border: 1px solid var(--border); 
-        border-radius: 8px; padding: 6px; color: var(--muted); 
-        cursor: pointer; font-size: 11px; text-align: center;
-    }
-    .slip-opt.active { border-color: var(--gold); color: var(--gold); }
-
     .token-box {
       background: var(--surface2); border-radius: 16px; padding: 16px;
-      border: 1px solid transparent; margin-bottom: 4px; transition: 0.2s;
+      border: 1px solid transparent; margin-bottom: 4px;
     }
     .label { font-size: 12px; color: var(--muted); margin-bottom: 12px; display: block; }
     
@@ -103,13 +82,6 @@
       cursor: pointer; color: var(--gold); transition: 0.2s;
     }
 
-    .error-banner {
-      background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.15);
-      color: var(--error); padding: 12px; border-radius: 12px; font-size: 13px;
-      margin-top: 12px; display: none; align-items: center; gap: 8px;
-    }
-    .error-banner.show { display: flex; }
-
     .btn-action {
       width: 100%; padding: 18px; border-radius: 16px; border: none;
       font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px;
@@ -118,22 +90,14 @@
     .btn-connect { background: var(--gold); color: black; }
     .btn-swap { background: var(--gold); color: black; display: none; }
 
-    /* TOKEN DROPDOWN */
     .token-dropdown {
-      display: none; position: absolute; top: 100%; left: 0; 
+      display: none; position: absolute; top: 105%; left: 0; 
       background: #1a1a1a; border: 1px solid var(--border);
-      border-radius: 12px; width: 120px; z-index: 10; margin-top: 5px;
+      border-radius: 12px; width: 120px; z-index: 10;
     }
     .token-dropdown.show { display: block; }
     .dd-item { padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; }
     .dd-item:hover { background: #252525; }
-
-    .modal-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal { background: #111; border: 1px solid var(--border); border-radius: 24px; padding: 24px; width: 90%; max-width: 380px; }
   </style>
 </head>
 <body>
@@ -147,19 +111,6 @@
   </nav>
 
   <div class="swap-card">
-    <div class="card-header">
-      <h2>Swap</h2>
-      <button class="settings-btn" id="setBtn">⚙️</button>
-      <div class="settings-panel" id="setPanel">
-        <span class="slip-title">Slippage Tolerance</span>
-        <div class="slip-grid">
-          <div class="slip-opt active" onclick="setSlippage('Auto', this)">Auto</div>
-          <div class="slip-opt" onclick="setSlippage(0.1, this)">0.1%</div>
-          <div class="slip-opt" onclick="setSlippage(0.5, this)">0.5%</div>
-        </div>
-      </div>
-    </div>
-
     <div class="token-box">
       <span class="label">Sell</span>
       <div class="input-row">
@@ -174,7 +125,7 @@
         </div>
       </div>
       <div class="balance-row">
-        <span id="usdIn">$0.00</span>
+        <span>$0.00</span>
         <span>Balance: <span id="balInText">0.00</span> <button class="max-btn" id="maxBtn" onclick="setMax()" style="display:none">MAX</button></span>
       </div>
     </div>
@@ -193,25 +144,13 @@
         </div>
       </div>
       <div class="balance-row">
-        <span id="usdOut">$0.00</span>
+        <span>$0.00</span>
         <span>Balance: <span id="balOutText">0.00</span></span>
       </div>
     </div>
 
-    <div class="error-banner" id="errorMsg">
-      ⚠️ Insufficient <span id="errToken">POL</span> balance
-    </div>
-
-    <button class="btn-action btn-connect" id="connBtn" onclick="openModal()">Connect Wallet</button>
-    <button class="btn-action btn-swap" id="swapBtn" disabled onclick="executeSwap()">Swap</button>
-  </div>
-
-  <div class="modal-overlay" id="modal">
-    <div class="modal">
-        <h3 style="margin-bottom:20px">Connect Wallet</h3>
-        <button class="btn-action btn-connect" onclick="connect()">MetaMask</button>
-        <button class="btn-action" style="background:#222; color:white; margin-top:10px" onclick="closeModal()">Cancel</button>
-    </div>
+    <button class="btn-action btn-connect" id="connBtn" onclick="connect()">Connect Wallet</button>
+    <button class="btn-action btn-swap" id="swapBtn" disabled>Insufficient Balance</button>
   </div>
 
 <script>
@@ -219,45 +158,27 @@
     connected: false,
     tokenIn: 'POL',
     tokenOut: 'ROXs',
-    balances: { POL: 1.00, USDT: 0.00, ROXs: 0.00 }, // Initial Real state
-    prices: { POL: 0.22, USDT: 1.00, ROXs: 0.00000001734 },
-    rate: 12803400,
-    slippage: 'Auto'
+    balances: { POL: 1.00, USDT: 0.00, ROXs: 0.00 },
+    rate: 12803400
   };
 
   function calculate() {
     const valIn = parseFloat(document.getElementById('valIn').value) || 0;
     const valInEl = document.getElementById('valIn');
     const swapBtn = document.getElementById('swapBtn');
-    const errorMsg = document.getElementById('errorMsg');
 
     let amountOut = state.tokenIn === 'ROXs' ? valIn / state.rate : valIn * state.rate;
     document.getElementById('valOut').value = amountOut > 0 ? amountOut.toFixed(0) : '';
 
-    // Insufficient Balance logic
-    const hasEnough = state.connected ? (valIn <= state.balances[state.tokenIn]) : true;
-    
-    if (!hasEnough && state.connected) {
-        valInEl.classList.add('red-text');
-        errorMsg.classList.add('show');
-        document.getElementById('errToken').textContent = state.tokenIn;
-        swapBtn.disabled = true;
-    } else {
-        valInEl.classList.remove('red-text');
-        errorMsg.classList.remove('show');
-        swapBtn.disabled = !state.connected || valIn <= 0;
-    }
-
-    // Dynamic Balance Text color
-    if (state.connected && state.balances[state.tokenIn] === 0) {
-        document.getElementById('balInText').classList.add('balance-red');
-    } else {
-        document.getElementById('balInText').classList.remove('balance-red');
+    if (state.connected) {
+      const hasEnough = valIn <= state.balances[state.tokenIn];
+      valInEl.classList.toggle('red-text', !hasEnough);
+      swapBtn.disabled = !hasEnough || valIn <= 0;
+      swapBtn.textContent = hasEnough ? 'Swap' : `Insufficient ${state.tokenIn} balance`;
     }
   }
 
   function setMax() {
-    // Deduct standard Polygon gas fee (~0.05 POL) only if selling POL
     let fee = (state.tokenIn === 'POL') ? 0.05 : 0;
     let max = state.balances[state.tokenIn] - fee;
     document.getElementById('valIn').value = max > 0 ? max.toFixed(2) : 0;
@@ -277,34 +198,39 @@
     state.tokenIn = t;
     document.getElementById('symIn').textContent = t;
     document.getElementById('iconIn').className = `token-icon icon-${t.toLowerCase()}`;
-    document.getElementById('iconIn').textContent = t[0];
     updateUI();
   }
 
   function updateUI() {
-    document.getElementById('balInText').textContent = state.connected ? state.balances[state.tokenIn] + " " + state.tokenIn : "0.00";
-    document.getElementById('balOutText').textContent = state.connected ? state.balances[state.tokenOut] + " " + state.tokenOut : "0.00";
+    document.getElementById('balInText').textContent = state.connected ? state.balances[state.tokenIn] : "0.00";
+    document.getElementById('balOutText').textContent = state.connected ? state.balances[state.tokenOut] : "0.00";
+    document.getElementById('balInText').classList.toggle('balance-red', state.connected && state.balances[state.tokenIn] === 0);
     calculate();
   }
 
   function connect() {
     state.connected = true;
-    closeModal();
     document.getElementById('connBtn').style.display = 'none';
     document.getElementById('swapBtn').style.display = 'block';
     document.getElementById('walletDisplay').style.display = 'flex';
+    document.getElementById('addrText').textContent = "0x0f42...195d";
     document.getElementById('maxBtn').style.display = 'inline-block';
     updateUI();
   }
 
+  function disconnect() {
+    state.connected = false;
+    document.getElementById('connBtn').style.display = 'block';
+    document.getElementById('swapBtn').style.display = 'none';
+    document.getElementById('walletDisplay').style.display = 'none';
+    document.getElementById('maxBtn').style.display = 'none';
+    document.getElementById('valIn').value = '';
+    document.getElementById('valOut').value = '';
+    updateUI();
+  }
+
   function toggleDropdown(e) { e.stopPropagation(); document.getElementById('tokenDd').classList.toggle('show'); }
-  function openModal() { document.getElementById('modal').classList.add('open'); }
-  function closeModal() { document.getElementById('modal').classList.remove('open'); }
-  window.onclick = () => { 
-    document.getElementById('tokenDd').classList.remove('show');
-    document.getElementById('setPanel').classList.remove('open'); 
-  };
-  document.getElementById('setBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('setPanel').classList.toggle('open'); };
+  window.onclick = () => { document.getElementById('tokenDd').classList.remove('show'); };
 </script>
 </body>
 </html>
