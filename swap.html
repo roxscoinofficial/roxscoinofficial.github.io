@@ -8,26 +8,121 @@
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
 <style>
-body { background:#0b0b12; color:#fff; font-family:Arial; display:flex; justify-content:center; padding:40px }
-.card { width:420px; background:#141421; padding:20px; border-radius:20px }
-input { width:100%; padding:12px; background:#1f1f2e; border:none; color:#fff; font-size:18px; border-radius:10px }
-select { padding:10px; border-radius:10px; background:#1f1f2e; color:#fff }
-button { width:100%; padding:14px; margin-top:10px; border:none; border-radius:12px; background:gold; font-weight:bold; cursor:pointer }
-.row { display:flex; justify-content:space-between; margin-bottom:10px }
-.small { font-size:12px; color:#888 }
-.slip button { margin:2px; padding:6px 10px; border-radius:8px; background:#222 }
-.active { background:gold !important; color:#000 }
+:root {
+  --gold:#F0C040;
+  --bg:#0c0c14;
+  --card:#141421;
+  --card2:#1c1c2b;
+  --text:#fff;
+  --muted:#888;
+}
+
+body{
+  background: radial-gradient(circle at top,#1a1a2e,#0c0c14);
+  color:var(--text);
+  font-family:Arial;
+  display:flex;
+  justify-content:center;
+  padding:40px;
+}
+
+.swap{
+  width:420px;
+  background:var(--card);
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 0 60px rgba(240,192,64,0.08);
+}
+
+h2{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.box{
+  background:var(--card2);
+  border-radius:16px;
+  padding:15px;
+  margin-bottom:10px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+input{
+  width:100%;
+  background:none;
+  border:none;
+  color:white;
+  font-size:26px;
+  outline:none;
+}
+
+select{
+  background:#222;
+  border:none;
+  padding:8px;
+  border-radius:10px;
+  color:white;
+}
+
+.center{
+  text-align:center;
+  margin:10px 0;
+}
+
+.swap-btn{
+  width:100%;
+  padding:14px;
+  background:linear-gradient(135deg,#F0C040,#C8860A);
+  border:none;
+  border-radius:14px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.slippage{
+  display:flex;
+  gap:6px;
+  margin-bottom:15px;
+}
+
+.slippage button{
+  flex:1;
+  padding:6px;
+  border:none;
+  border-radius:8px;
+  background:#222;
+  color:#aaa;
+  cursor:pointer;
+}
+
+.slippage .active{
+  background:var(--gold);
+  color:black;
+}
+
+.route{
+  font-size:12px;
+  color:#888;
+  margin-top:10px;
+  text-align:center;
+}
 </style>
 </head>
 
 <body>
 
-<div class="card">
+<div class="swap">
 
 <h2>ROXs Swap</h2>
 
-<div class="slip">
-Slippage:
+<div class="slippage">
 <button class="active" onclick="setSlip(this,'auto')">Auto</button>
 <button onclick="setSlip(this,0.5)">0.5%</button>
 <button onclick="setSlip(this,1)">1%</button>
@@ -35,15 +130,13 @@ Slippage:
 <button onclick="setSlip(this,5.5)">5.5%</button>
 </div>
 
-<br>
-
-<div>
+<div class="box">
 <div class="row">
-<span>You Pay</span>
-<span class="small">Balance: <span id="balIn">0</span></span>
+<span>You pay</span>
+<span>Balance: <span id="balIn">0</span></span>
 </div>
 
-<input id="amountIn" placeholder="0.0" oninput="calc()" />
+<input id="amountIn" oninput="calc()" placeholder="0.0">
 
 <select id="tokenIn" onchange="calc()">
 <option value="POL">POL</option>
@@ -52,19 +145,17 @@ Slippage:
 </select>
 </div>
 
-<br>
-
+<div class="center">
 <button onclick="flip()">⇅</button>
-
-<br>
-
-<div>
-<div class="row">
-<span>You Receive</span>
-<span class="small">Balance: <span id="balOut">0</span></span>
 </div>
 
-<input id="amountOut" disabled />
+<div class="box">
+<div class="row">
+<span>You receive</span>
+<span>Balance: <span id="balOut">0</span></span>
+</div>
+
+<input id="amountOut" disabled>
 
 <select id="tokenOut" onchange="calc()">
 <option value="ROXS">ROXs</option>
@@ -73,10 +164,10 @@ Slippage:
 </select>
 </div>
 
-<div class="small" id="route"></div>
+<div class="route" id="route"></div>
 
-<button onclick="connect()">Connect Wallet</button>
-<button onclick="swap()">Swap</button>
+<button class="swap-btn" onclick="connect()">Connect Wallet</button>
+<button class="swap-btn" onclick="swap()">Swap</button>
 
 </div>
 
@@ -89,15 +180,15 @@ let provider, signer, address;
 let slippage = 1;
 
 const prices = {
-  POL: 0.22,
-  USDT: 1,
-  ROXS: 0.000000007158
+  POL:0.22,
+  USDT:1,
+  ROXS:0.000000007158
 };
 
 function setSlip(btn,val){
-document.querySelectorAll(".slip button").forEach(b=>b.classList.remove("active"))
+document.querySelectorAll(".slippage button").forEach(b=>b.classList.remove("active"))
 btn.classList.add("active")
-slippage = val === "auto" ? 1 : val
+slippage = val==="auto"?1:val
 calc()
 }
 
@@ -112,27 +203,34 @@ async function connect(){
 if(!window.ethereum) return alert("Install MetaMask")
 
 provider = new ethers.providers.Web3Provider(window.ethereum)
-await provider.send("eth_requestAccounts", [])
+await provider.send("eth_requestAccounts",[])
 signer = provider.getSigner()
 address = await signer.getAddress()
 
 updateBalances()
+alert("Connected: "+address)
 }
 
 async function updateBalances(){
-const ERC20 = ["function balanceOf(address) view returns(uint)","function decimals() view returns(uint8)"]
 
-const pol = await provider.getBalance(address)
-document.getElementById("balIn").innerText = ethers.utils.formatEther(pol).slice(0,6)
+const ERC20 = ["function balanceOf(address) view returns(uint)"]
 
-const roxsC = new ethers.Contract(ROXS,ERC20,provider)
-const roxs = await roxsC.balanceOf(address)
-document.getElementById("balOut").innerText = ethers.utils.formatUnits(roxs,18).slice(0,6)
+// POL
+let pol = await provider.getBalance(address)
+document.getElementById("balIn").innerText =
+ethers.utils.formatEther(pol).slice(0,6)
+
+// ROXs
+let roxsC = new ethers.Contract(ROXS,ERC20,provider)
+let roxs = await roxsC.balanceOf(address)
+document.getElementById("balOut").innerText =
+ethers.utils.formatUnits(roxs,18).slice(0,6)
 }
 
 function calc(){
-let amount = parseFloat(amountIn.value || 0)
-if(!amount) return amountOut.value = ""
+
+let amount = parseFloat(amountIn.value||0)
+if(!amount){ amountOut.value=""; return }
 
 let from = tokenIn.value
 let to = tokenOut.value
@@ -143,7 +241,7 @@ let out = (usd / prices[to]) * 0.98
 amountOut.value = out.toFixed(6)
 
 document.getElementById("route").innerText =
-from + " → " + to + " | Slippage: " + slippage + "%"
+`${from} → ${to} | Slippage ${slippage}%`
 }
 
 function swap(){
@@ -152,14 +250,14 @@ let from = tokenIn.value
 let to = tokenOut.value
 
 let input =
-from === "POL" ? "ETH" :
-from === "USDT" ? USDT : ROXS
+from==="POL"?"ETH":
+from==="USDT"?USDT:ROXS
 
 let output =
-to === "POL" ? "ETH" :
-to === "USDT" ? USDT : ROXS
+to==="POL"?"ETH":
+to==="USDT"?USDT:ROXS
 
-let url = `https://app.uniswap.org/swap?inputCurrency=${input}&outputCurrency=${output}&chain=polygon`
+let url = `https://app.uniswap.org/#/swap?chain=polygon&inputCurrency=${input}&outputCurrency=${output}`
 
 window.open(url,"_blank")
 }
