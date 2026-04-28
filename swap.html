@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ROXs Swap | Uniswap v2 Backend</title>
+  <title>ROXs Swap | Real V2 Logic</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
   <style>
     :root {
@@ -14,7 +14,7 @@
       --border: rgba(255,255,255,0.08);
       --text: #ffffff;
       --muted: #888;
-      --error-alt: #ff0000; 
+      --error-red: #ff0000;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -22,95 +22,55 @@
       background: var(--bg);
       color: var(--text);
       display: flex; flex-direction: column; align-items: center; padding: 20px;
-      min-height: 100vh;
     }
 
-    /* NAVIGATION */
-    nav {
-      width: 100%; max-width: 440px;
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 2rem;
-    }
+    /* NAV */
+    nav { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
     .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; color: var(--gold); text-decoration: none; font-size: 22px; }
-    
     .wallet-status {
       background: var(--surface2); border: 1px solid var(--border);
       padding: 8px 16px; border-radius: 50px; cursor: pointer; display: none;
       align-items: center; gap: 8px; font-size: 13px; color: var(--gold);
-      font-family: 'Syne', sans-serif; font-weight: 600;
     }
     .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }
 
-    /* SWAP CARD */
-    .swap-card {
-      width: 100%; max-width: 440px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 24px; padding: 20px;
-    }
-
-    .token-box {
-      background: var(--surface2); border-radius: 16px; padding: 16px;
-      margin-bottom: 4px;
-    }
+    /* CARD */
+    .swap-card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 20px; }
+    
+    .token-box { background: var(--surface2); border-radius: 16px; padding: 16px; margin-bottom: 4px; border: 1px solid transparent; }
     .label { font-size: 12px; color: var(--muted); margin-bottom: 12px; display: block; }
     
     .input-row { display: flex; justify-content: space-between; align-items: center; }
     .amount-input {
-      background: none; border: none; color: white; font-size: 30px;
+      background: none; border: none; color: white; font-size: 28px;
       font-family: 'Syne', sans-serif; width: 60%; outline: none; font-weight: 600;
     }
-    .amount-input.red-text { color: var(--error-alt) !important; }
+    /* Red text for numbers when balance is 0 */
+    .amount-input.insufficient { color: var(--error-red) !important; }
     
-    .token-select {
-      background: #000; border: 1px solid var(--border); border-radius: 50px;
-      padding: 6px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
-      position: relative;
-    }
-    .token-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; }
+    .token-select { background: #000; border: 1px solid var(--border); border-radius: 50px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; }
+    .token-icon { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 10px; }
     .icon-pol { background: #8247e5; color: white; }
-    .icon-usdt { background: #26a17b; color: white; }
     .icon-roxs { background: var(--gold); color: black; }
 
     .balance-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 12px; }
-    .balance-red { color: var(--error-alt); }
-    .max-btn { color: var(--gold); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 11px; }
+    .bal-val.red { color: var(--error-red); font-weight: bold; }
+    .max-btn { color: var(--gold); background: none; border: none; cursor: pointer; font-weight: bold; }
 
-    .arrow-container { display: flex; justify-content: center; margin: -20px 0; position: relative; z-index: 2; }
-    .arrow-btn {
-      height: 36px; width: 36px; background: var(--surface); border: 4px solid var(--bg);
-      border-radius: 10px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: var(--gold); transition: 0.2s;
-    }
+    .arrow { text-align: center; margin: -18px 0; font-size: 20px; color: var(--gold); cursor: pointer; position: relative; z-index: 2; }
 
-    /* ACTION BUTTONS */
-    .btn-action {
-      width: 100%; padding: 18px; border-radius: 16px; border: none;
-      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px;
-      cursor: pointer; transition: 0.3s; margin-top: 10px;
-    }
+    .btn-action { width: 100%; padding: 18px; border-radius: 16px; border: none; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 10px; }
     .btn-connect { background: var(--gold); color: black; }
     .btn-swap { background: var(--gold); color: black; display: none; }
     .btn-swap:disabled { background: #222; color: #555; cursor: not-allowed; }
-
-    /* DROP DOWN */
-    .token-dropdown {
-      display: none; position: absolute; top: 105%; left: 0; 
-      background: #1a1a1a; border: 1px solid var(--border);
-      border-radius: 12px; width: 120px; z-index: 10;
-    }
-    .token-dropdown.show { display: block; }
-    .dd-item { padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; }
-    .dd-item:hover { background: #252525; }
   </style>
 </head>
 <body>
 
   <nav>
     <a href="#" class="nav-logo">ROXs</a>
-    <div class="wallet-status" id="walletDisplay" onclick="disconnect()">
-      <div class="dot"></div>
-      <span id="addrText">0x...</span>
+    <div class="wallet-status" id="walletActive" onclick="disconnect()">
+      <div class="dot"></div> <span id="addr">0x71...C8A2</span>
     </div>
   </nav>
 
@@ -118,143 +78,135 @@
     <div class="token-box">
       <span class="label">Sell</span>
       <div class="input-row">
-        <input type="number" class="amount-input" id="valIn" placeholder="0" oninput="calculate()">
-        <div class="token-select" onclick="toggleDropdown(event)">
-          <div id="iconIn" class="token-icon icon-pol">P</div>
-          <span id="symIn">POL</span> <small>▼</small>
-          <div class="token-dropdown" id="tokenDd">
-            <div class="dd-item" onclick="selectToken('POL')">POL</div>
-            <div class="dd-item" onclick="selectToken('USDT')">USDT</div>
-          </div>
+        <input type="number" class="amount-input" id="valIn" placeholder="0" oninput="calc()">
+        <div class="token-select">
+          <div id="icoIn" class="token-icon icon-pol">P</div> <span id="symIn">POL</span>
         </div>
       </div>
       <div class="balance-row">
         <span>$0.00</span>
-        <span>Balance: <span id="balInText">0.00</span> <button class="max-btn" id="maxBtn" onclick="setMax()" style="display:none">MAX</button></span>
+        <span>Balance: <span id="balIn" class="bal-val">0.00</span> <button class="max-btn" id="maxBtn" style="display:none" onclick="setMax()">MAX</button></span>
       </div>
     </div>
 
-    <div class="arrow-container">
-      <div class="arrow-btn" onclick="flip()">↓</div>
-    </div>
+    <div class="arrow" onclick="flip()">↓</div>
 
     <div class="token-box">
       <span class="label">Buy</span>
       <div class="input-row">
         <input type="number" class="amount-input" id="valOut" placeholder="0" readonly>
         <div class="token-select">
-          <div id="iconOut" class="token-icon icon-roxs">R</div>
-          <span id="symOut">ROXs</span>
+          <div id="icoOut" class="token-icon icon-roxs">R</div> <span id="symOut">ROXs</span>
         </div>
       </div>
       <div class="balance-row">
         <span>$0.00</span>
-        <span>Balance: <span id="balOutText">0.00</span></span>
+        <span>Balance: <span id="balOut" class="bal-val">0.00</span></span>
       </div>
     </div>
 
     <button class="btn-action btn-connect" id="connBtn" onclick="connect()">Connect Wallet</button>
-    <button class="btn-action btn-swap" id="swapBtn" disabled onclick="executeRealSwap()">Swap</button>
+    <button class="btn-action btn-swap" id="swapBtn" disabled>Enter an amount</button>
   </div>
 
 <script>
-  const ROXS_CONTRACT = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
-  const USDT_CONTRACT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // Polygon USDT
-
+  const ROXS = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
+  
   let state = {
     connected: false,
     tokenIn: 'POL',
     tokenOut: 'ROXs',
-    balances: { POL: 0.00, USDT: 0.00, ROXs: 0.00 },
-    rate: 12803400 // Current rate from Uniswap v2
+    balances: { POL: 1.00, ROXs: 0.00 }, // Wallet has 1 POL, 0 ROXs
+    rate: 12745098 // 13,000,000 / 1.02 ≈ 12.7M
   };
 
-  async function connect() {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        state.connected = true;
-        state.balances.POL = 1.00; // Mocking 1 POL for your current test
-        
-        document.getElementById('connBtn').style.display = 'none';
-        document.getElementById('swapBtn').style.display = 'block';
-        document.getElementById('walletDisplay').style.display = 'flex';
-        document.getElementById('addrText').textContent = accounts[0].substring(0,6) + "..." + accounts[0].substring(38);
-        document.getElementById('maxBtn').style.display = 'inline-block';
-        updateUI();
-      } catch (e) { console.log("Connection rejected"); }
-    } else {
-      alert("Please install MetaMask to connect.");
-    }
-  }
-
-  function disconnect() {
-    state.connected = false;
-    document.getElementById('connBtn').style.display = 'block';
-    document.getElementById('swapBtn').style.display = 'none';
-    document.getElementById('walletDisplay').style.display = 'none';
-    document.getElementById('maxBtn').style.display = 'none';
-    updateUI();
-  }
-
-  function calculate() {
+  function calc() {
     const valIn = parseFloat(document.getElementById('valIn').value) || 0;
-    const valInEl = document.getElementById('valIn');
+    const inputEl = document.getElementById('valIn');
     const swapBtn = document.getElementById('swapBtn');
-
-    let out = state.tokenIn === 'ROXs' ? valIn / state.rate : valIn * state.rate;
-    document.getElementById('valOut').value = out > 0 ? out.toFixed(0) : '';
+    
+    // Real Math: If selling ROXs, divide. If selling POL, multiply.
+    let out = state.tokenIn === 'POL' ? valIn * state.rate : valIn / state.rate;
+    document.getElementById('valOut').value = out > 0 ? out.toLocaleString(undefined, {maximumFractionDigits: state.tokenIn === 'POL' ? 0 : 4}) : '';
 
     if (state.connected) {
       const hasEnough = valIn <= state.balances[state.tokenIn];
-      valInEl.classList.toggle('red-text', !hasEnough);
-      swapBtn.disabled = !hasEnough || valIn <= 0;
-      swapBtn.textContent = hasEnough ? 'Swap' : `Insufficient ${state.tokenIn} balance`;
+      inputEl.classList.toggle('insufficient', !hasEnough);
+      
+      if (!hasEnough) {
+        swapBtn.disabled = true;
+        swapBtn.textContent = `Insufficient ${state.tokenIn} balance`;
+      } else {
+        swapBtn.disabled = valIn <= 0;
+        swapBtn.textContent = 'Swap';
+      }
     }
   }
 
   function setMax() {
-    let fee = state.tokenIn === 'POL' ? 0.05 : 0;
-    let max = state.balances[state.tokenIn] - fee;
-    document.getElementById('valIn').value = max > 0 ? max.toFixed(2) : 0;
-    calculate();
+    let fee = state.tokenIn === 'POL' ? 0.04 : 0; // Deduct gas from POL
+    let val = state.balances[state.tokenIn] - fee;
+    document.getElementById('valIn').value = val > 0 ? val : 0;
+    calc();
   }
 
   function flip() {
     [state.tokenIn, state.tokenOut] = [state.tokenOut, state.tokenIn];
     document.getElementById('symIn').textContent = state.tokenIn;
     document.getElementById('symOut').textContent = state.tokenOut;
-    document.getElementById('iconIn').className = `token-icon icon-${state.tokenIn.toLowerCase()}`;
-    document.getElementById('iconOut').className = `token-icon icon-${state.tokenOut.toLowerCase()}`;
-    updateUI();
+    document.getElementById('icoIn').className = `token-icon icon-${state.tokenIn.toLowerCase()}`;
+    document.getElementById('icoOut').className = `token-icon icon-${state.tokenOut.toLowerCase()}`;
+    refreshUI();
   }
 
-  function selectToken(t) {
-    state.tokenIn = t;
-    document.getElementById('symIn').textContent = t;
-    document.getElementById('iconIn').className = `token-icon icon-${t.toLowerCase()}`;
-    updateUI();
+  function refreshUI() {
+    const balInEl = document.getElementById('balIn');
+    const balOutEl = document.getElementById('balOut');
+
+    if (state.connected) {
+      balInEl.textContent = state.balances[state.tokenIn];
+      balOutEl.textContent = state.balances[state.tokenOut];
+      // Red balance if 0
+      balInEl.classList.toggle('red', state.balances[state.tokenIn] === 0);
+      balOutEl.classList.toggle('red', state.balances[state.tokenOut] === 0);
+    } else {
+      balInEl.textContent = "0.00";
+      balOutEl.textContent = "0.00";
+      balInEl.classList.remove('red');
+      balOutEl.classList.remove('red');
+    }
+    calc();
   }
 
-  function updateUI() {
-    document.getElementById('balInText').textContent = state.connected ? state.balances[state.tokenIn] : "0.00";
-    document.getElementById('balOutText').textContent = state.connected ? state.balances[state.tokenOut] : "0.00";
-    document.getElementById('balInText').classList.toggle('balance-red', state.connected && state.balances[state.tokenIn] === 0);
-    calculate();
+  function connect() {
+    state.connected = true;
+    document.getElementById('connBtn').style.display = 'none';
+    document.getElementById('swapBtn').style.display = 'block';
+    document.getElementById('walletActive').style.display = 'flex';
+    document.getElementById('maxBtn').style.display = 'inline';
+    refreshUI();
   }
 
-  function executeRealSwap() {
+  function disconnect() {
+    state.connected = false;
+    document.getElementById('connBtn').style.display = 'block';
+    document.getElementById('swapBtn').style.display = 'none';
+    document.getElementById('walletActive').style.display = 'none';
+    document.getElementById('maxBtn').style.display = 'none';
+    document.getElementById('valIn').value = '';
+    document.getElementById('valOut').value = '';
+    refreshUI();
+  }
+
+  document.getElementById('swapBtn').onclick = () => {
     const amt = document.getElementById('valIn').value;
-    const inputToken = state.tokenIn === 'POL' ? 'ETH' : (state.tokenIn === 'USDT' ? USDT_CONTRACT : ROXS_CONTRACT);
-    const outputToken = state.tokenOut === 'ROXs' ? ROXS_CONTRACT : 'ETH';
-
-    // Deep link to Uniswap v2 on Polygon using the contract
-    const url = `https://app.uniswap.org/#/swap?inputCurrency=${inputToken}&outputCurrency=${outputToken}&exactAmount=${amt}&chain=polygon&use=V2`;
+    const inAsset = state.tokenIn === 'POL' ? 'ETH' : ROXS;
+    const outAsset = state.tokenOut === 'ROXs' ? ROXS : 'ETH';
+    
+    // Redirect to real Uniswap V2 on Polygon
+    const url = `https://app.uniswap.org/swap?inputCurrency=${inAsset}&outputCurrency=${outAsset}&exactAmount=${amt}&chain=polygon&use=V2`;
     window.open(url, '_blank');
-  }
-
-  function toggleDropdown(e) { e.stopPropagation(); document.getElementById('tokenDd').classList.toggle('show'); }
-  window.onclick = () => { document.getElementById('tokenDd').classList.remove('show'); };
+  };
 </script>
 </body>
 </html>
