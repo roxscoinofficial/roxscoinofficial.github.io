@@ -50,14 +50,13 @@ nav{
   border:1px solid var(--border);
 }
 
-/* BOX */
+/* TOKEN BOX */
 .token-box{
   background:var(--surface2);
   padding:16px;
   border-radius:16px;
   margin-bottom:6px;
 }
-
 .label{
   font-size:12px;
   color:var(--muted);
@@ -113,9 +112,16 @@ nav{
   color:var(--muted);
   margin-top:10px;
 }
-
 .balance-red{color:var(--error)}
 
+.max{
+  color:var(--gold);
+  cursor:pointer;
+  margin-left:8px;
+  font-weight:bold;
+}
+
+/* ARROW */
 .arrow{
   display:flex;
   justify-content:center;
@@ -141,7 +147,6 @@ nav{
   font-weight:700;
   cursor:pointer;
 }
-
 .connect{background:var(--gold);color:black}
 .swap{background:#222;color:#555}
 .swap.active{background:var(--gold);color:black}
@@ -159,16 +164,22 @@ nav{
 <!-- SELL -->
 <div class="token-box">
 <div class="label">Vender</div>
+
 <div class="input-row">
 <input id="valIn" class="amount-input" placeholder="0" oninput="calc()">
+
 <div class="token-select" onclick="toggleToken()">
 <div id="iconIn" class="token-icon icon-pol">P</div>
 <span id="symIn">POL</span>
 </div>
 </div>
+
 <div class="balance-row">
 <span>$0.00</span>
-<span>Balance: <span id="balIn">0</span></span>
+<span>
+Balance: <span id="balIn">0</span>
+<span class="max" onclick="setMax()">MAX</span>
+</span>
 </div>
 </div>
 
@@ -180,6 +191,7 @@ nav{
 <!-- BUY -->
 <div class="token-box">
 <div class="label">Comprar</div>
+
 <div class="input-row">
 <input id="valOut" class="amount-input" readonly>
 <div class="token-select">
@@ -194,26 +206,28 @@ ROXs
 </div>
 
 <script>
+const ROXS = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
+const USDT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+
 let state={
   tokenIn:"POL",
-  balance:{POL:1,USDT:0,ROXs:0},
+  balance:{POL:1.25,USDT:250,ROXs:0},
 
-  // 👇 tasas separadas
   rate:{
     POL:12803400,
-    USDT:135817000
+    USDT:13500000
   }
 }
 
+// CALCULO
 function calc(){
   let val=parseFloat(valIn.value)||0
   let bal=state.balance[state.tokenIn]
   let rate=state.rate[state.tokenIn]
 
   let out=val*rate
-  valOut.value=out?Math.floor(out):""
+  valOut.value=out?Math.floor(out).toLocaleString():""
 
-  // reset
   valIn.classList.remove("red")
 
   if(val<=0){
@@ -232,6 +246,19 @@ function calc(){
   }
 }
 
+// MAX
+function setMax(){
+  let val=state.balance[state.tokenIn]
+
+  if(state.tokenIn==="POL"){
+    val -= 0.01 // gas estimado
+  }
+
+  valIn.value=val.toFixed(4)
+  calc()
+}
+
+// CAMBIAR TOKEN
 function flip(){
   if(state.tokenIn==="POL"){
     state.tokenIn="USDT"
@@ -245,8 +272,21 @@ function flip(){
   calc()
 }
 
-function toggleToken(){
-  flip()
+function toggleToken(){ flip() }
+
+// SWAP → UNISWAP
+btn.onclick = () => {
+  let val = valIn.value
+  if(!val || btn.classList.contains("swap") && !btn.classList.contains("active")) return
+
+  let input =
+    state.tokenIn === "POL"
+      ? "ETH"
+      : USDT
+
+  let url = `https://app.uniswap.org/#/swap?inputCurrency=${input}&outputCurrency=${ROXS}&exactAmount=${val}&chain=polygon`
+
+  window.open(url,"_blank")
 }
 </script>
 
