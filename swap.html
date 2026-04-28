@@ -15,6 +15,7 @@
       --text: #ffffff;
       --muted: #888;
       --error: #ff4d4d;
+      --error-alt: #ff0000; /* Alternate red for the numbers */
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -58,7 +59,7 @@
     .settings-panel {
       display: none; position: absolute; top: 60px; right: 20px;
       background: #1a1a1a; border: 1px solid var(--border);
-      border-radius: 12px; padding: 15px; z-index: 100; width: 220px;
+      border-radius: 12px; padding: 15px; z-index: 100; width: 240px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
     .settings-panel.open { display: block; }
@@ -69,7 +70,7 @@
         border-radius: 8px; padding: 6px; color: var(--muted); 
         cursor: pointer; font-size: 11px; text-align: center;
     }
-    .slip-opt.active { border-color: var(--gold); color: var(--gold); }
+    .slip-opt.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
 
     /* TOKEN INPUTS */
     .token-box {
@@ -84,6 +85,7 @@
       background: none; border: none; color: white; font-size: 30px;
       font-family: 'Syne', sans-serif; width: 60%; outline: none; font-weight: 600;
     }
+    .amount-input.red-text { color: var(--error-alt) !important; }
     
     .token-select {
       background: #000; border: 1px solid var(--border); border-radius: 50px;
@@ -157,16 +159,16 @@
       <h2>Swap</h2>
       <button class="settings-btn" id="setBtn">⚙️</button>
       <div class="settings-panel" id="setPanel">
-        <span class="slip-title">Max Slippage</span>
+        <span class="slip-title">Slippage Tolerance</span>
         <div class="slip-grid">
+          <div class="slip-opt active" onclick="setSlippage('Auto', this)">Auto</div>
           <div class="slip-opt" onclick="setSlippage(0.1, this)">0.1%</div>
-          <div class="slip-opt active" onclick="setSlippage(0.5, this)">0.5%</div>
-          <div class="slip-opt" onclick="setSlippage(1.0, this)">1.0%</div>
+          <div class="slip-opt" onclick="setSlippage(0.5, this)">0.5%</div>
         </div>
       </div>
     </div>
 
-    <div class="token-box">
+    <div class="token-box" id="sellBox">
       <span class="label">Sell</span>
       <div class="input-row">
         <input type="number" class="amount-input" id="valIn" placeholder="0" oninput="calculate()">
@@ -185,7 +187,7 @@
       <div class="arrow-btn" onclick="flip()">↓</div>
     </div>
 
-    <div class="token-box">
+    <div class="token-box" id="buyBox">
       <span class="label">Buy</span>
       <div class="input-row">
         <input type="number" class="amount-input" id="valOut" placeholder="0" readonly>
@@ -206,8 +208,8 @@
 
     <div class="stats-box" id="stats" style="display:none">
       <div class="stat-row"><span>Exchange Rate</span> <span id="rateText">1 POL = 12.6M ROXs</span></div>
-      <div class="stat-row"><span>Slippage Tolerance</span> <span id="slipText">0.5%</span></div>
-      <div class="stat-row"><span>Network Fee</span> <span>~$0.01</span></div>
+      <div class="stat-row"><span>Slippage Tolerance</span> <span id="slipText">Auto</span></div>
+      <div class="stat-row"><span>Network Fee</span> <span id="feeText">~$0.01 (Gas: 0.05 POL)</span></div>
     </div>
 
     <button class="btn-action btn-connect" id="connBtn" onclick="openModal()">Connect Wallet</button>
@@ -230,14 +232,16 @@
   </div>
 
 <script>
+  // Logical State based on Image 6 (1 POL balance)
   let state = {
     connected: false,
     tokenIn: 'POL',
     tokenOut: 'ROXs',
-    balances: { POL: 1.00, ROXs: 0.00 },
+    balances: { POL: 1.00, ROXs: 0.00 }, // User truly has 1 POL
     prices: { POL: 0.22, ROXs: 0.00000001734 },
     rate: 12687300,
-    slippage: 0.5
+    slippage: 'Auto',
+    standardGasCostInToken: { POL: 0.05, ROXs: 0 } // Estimate for MAX calc
   };
 
   // UI Handlers
@@ -251,70 +255,118 @@
     state.slippage = val;
     document.querySelectorAll('.slip-opt').forEach(opt => opt.classList.remove('active'));
     el.classList.add('active');
-    document.getElementById('slipText').textContent = val + '%';
+    document.getElementById('slipText').textContent = val === 'Auto' ? 'Auto' : val + '%';
   }
 
   function calculate() {
     const valIn = parseFloat(document.getElementById('valIn').value) || 0;
+    const valInEl = document.getElementById('valIn');
     const valOutEl = document.getElementById('valOut');
     const swapBtn = document.getElementById('swapBtn');
     const errorMsg = document.getElementById('errorMsg');
     const stats = document.getElementById('stats');
 
+    // Bidirectional exchange rate based on input currency
+    let pureResult = state.tokenIn === 'POL' ? valIn * state.rate : valIn / state.rate;
+    // Apply 0.3% base fee
+    const amountOut = pureResult * 0.997;
+
     if (valIn <= 0) {
         valOutEl.value = '';
+        valInEl.classList.remove('red-text');
         stats.style.display = 'none';
         swapBtn.disabled = true;
         errorMsg.classList.remove('show');
         return;
     }
 
-    const result = state.tokenIn === 'POL' ? valIn * state.rate : valIn / state.rate;
-    valOutEl.value = result.toLocaleString('en-US', {maximumFractionDigits: 0}).replace(/,/g, '');
+    valOutEl.value = amountOut.toLocaleString('en-US', {maximumFractionDigits: 0}).replace(/,/g, '');
     
+    // Update prices
     document.getElementById('usdIn').textContent = '$' + (valIn * state.prices[state.tokenIn]).toFixed(2);
-    document.getElementById('usdOut').textContent = '$' + (valIn * state.prices[state.tokenIn] * 0.99).toFixed(2);
+    document.getElementById('usdOut').textContent = '$' + (valIn * state.prices[state.tokenIn] * 0.997).toFixed(2);
 
+    // Insufficient Balance Check
     const hasEnough = valIn <= state.balances[state.tokenIn];
     if (!hasEnough) {
+        valInEl.classList.add('red-text'); // Turn input numbers bright red like image 5
         errorMsg.classList.add('show');
         document.getElementById('errToken').textContent = state.tokenIn;
         swapBtn.disabled = true;
         swapBtn.textContent = 'Insufficient Balance';
     } else {
+        valInEl.classList.remove('red-text');
         errorMsg.classList.remove('show');
         swapBtn.disabled = !state.connected;
         swapBtn.textContent = 'Swap';
     }
 
     stats.style.display = 'block';
-    document.getElementById('rateText').textContent = `1 POL = ${state.rate.toLocaleString()} ROXs`;
+    // Bidirectional exchange rate display
+    const rateIn = 1;
+    const rateOut = state.tokenIn === 'POL' ? state.rate : (1/state.rate);
+    const inSym = state.tokenIn;
+    const outSym = state.tokenOut;
+    document.getElementById('rateText').textContent = `1 ${inSym} = ${rateOut.toLocaleString()} ${outSym}`;
   }
 
   function flip() {
     [state.tokenIn, state.tokenOut] = [state.tokenOut, state.tokenIn];
+    
+    // Update input colors
+    document.getElementById('valIn').classList.remove('red-text');
+    
     document.getElementById('symIn').textContent = state.tokenIn;
     document.getElementById('symOut').textContent = state.tokenOut;
     document.getElementById('iconIn').className = `token-icon icon-${state.tokenIn.toLowerCase()}`;
     document.getElementById('iconOut').className = `token-icon icon-${state.tokenOut.toLowerCase()}`;
     document.getElementById('iconIn').textContent = state.tokenIn[0];
     document.getElementById('iconOut').textContent = state.tokenOut[0];
-    document.getElementById('balInText').textContent = state.balances[state.tokenIn].toFixed(2);
-    document.getElementById('balOutText').textContent = state.balances[state.tokenOut].toFixed(2);
+    
+    updateDisplayedBalances();
     document.getElementById('valIn').value = '';
     calculate();
   }
 
   function setMax() {
-    document.getElementById('valIn').value = state.balances[state.tokenIn];
+    if (!connected) { openModal(); return; }
+    
+    // LOGIC: Deduct standard gas cost from total balance first
+    const totalBalance = state.balances[state.tokenIn];
+    const gasBufferTokenAmt = state.standardGasCostInToken[state.tokenIn];
+    
+    let maxSpendable = totalBalance - gasBufferTokenAmt;
+    if (maxSpendable < 0) maxSpendable = 0; // Prevent negative spend
+
+    document.getElementById('valIn').value = maxSpendable.toString();
     calculate();
+  }
+
+  function updateDisplayedBalances() {
+      if (connected) {
+          document.getElementById('balInText').textContent = formatNum(state.balances[state.tokenIn], state.tokenIn);
+          document.getElementById('balOutText').textContent = formatNum(state.balances[state.tokenOut], state.tokenOut);
+      } else {
+          document.getElementById('balInText').textContent = '0.00';
+          document.getElementById('balOutText').textContent = '0.00';
+      }
+  }
+
+  function formatNum(n, token) {
+      if (token === 'ROXs') {
+          if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+          if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+          if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
+      }
+      return n.toFixed(2);
   }
 
   // CONNECTION LOGIC
   function openModal() { document.getElementById('modal').classList.add('open'); }
-  function closeModal() { document.getElementById('modal').classList.remove('remove'); }
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
 
   async function connect(type) {
+    closeModal();
     if(type === 'MetaMask' && window.ethereum) {
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -324,7 +376,6 @@
         // Mock for other wallets
         onConnected("0x71C...8A2");
     }
-    document.getElementById('modal').classList.remove('open');
   }
 
   function onConnected(addr) {
@@ -333,11 +384,11 @@
     document.getElementById('swapBtn').style.display = 'block';
     document.getElementById('walletDisplay').style.display = 'flex';
     document.getElementById('addrText').textContent = addr;
+    updateDisplayedBalances();
     calculate();
   }
 
   function disconnect() {
-    state.connected = false;
     location.reload();
   }
 
@@ -345,12 +396,21 @@
       const btn = document.getElementById('swapBtn');
       btn.disabled = true;
       btn.textContent = 'Confirming in Wallet...';
+      btn.classList.add('loading'); // Assumes loading animation exists
+
+      // Real swap via Uniswap router would be integrated here
       setTimeout(() => {
           alert("Transaction Sent to Polygon Mainnet!");
           btn.textContent = 'Swap';
+          btn.classList.remove('loading');
           btn.disabled = false;
       }, 2000);
   }
+
+  // Init
+  window.addEventListener('load', () => {
+    updateDisplayedBalances();
+  });
 </script>
 </body>
 </html>
