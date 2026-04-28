@@ -15,7 +15,7 @@
       --text: #ffffff;
       --muted: #888;
       --error: #ff4d4d;
-      --error-alt: #ff0000; /* Alternate red for the numbers */
+      --error-alt: #ff0000; 
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -26,7 +26,6 @@
       min-height: 100vh;
     }
 
-    /* NAVIGATION */
     nav {
       width: 100%; max-width: 480px;
       display: flex; justify-content: space-between; align-items: center;
@@ -42,7 +41,6 @@
     }
     .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }
 
-    /* SWAP CARD */
     .swap-card {
       width: 100%; max-width: 440px;
       background: var(--surface);
@@ -55,7 +53,6 @@
     .card-header h2 { font-family: 'Syne', sans-serif; font-size: 18px; }
     .settings-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; }
 
-    /* SLIPPAGE PANEL */
     .settings-panel {
       display: none; position: absolute; top: 60px; right: 20px;
       background: #1a1a1a; border: 1px solid var(--border);
@@ -70,14 +67,12 @@
         border-radius: 8px; padding: 6px; color: var(--muted); 
         cursor: pointer; font-size: 11px; text-align: center;
     }
-    .slip-opt.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+    .slip-opt.active { border-color: var(--gold); color: var(--gold); }
 
-    /* TOKEN INPUTS */
     .token-box {
       background: var(--surface2); border-radius: 16px; padding: 16px;
       border: 1px solid transparent; margin-bottom: 4px; transition: 0.2s;
     }
-    .token-box:hover { border-color: rgba(255,255,255,0.1); }
     .label { font-size: 12px; color: var(--muted); margin-bottom: 12px; display: block; }
     
     .input-row { display: flex; justify-content: space-between; align-items: center; }
@@ -90,12 +85,15 @@
     .token-select {
       background: #000; border: 1px solid var(--border); border-radius: 50px;
       padding: 6px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
+      position: relative;
     }
     .token-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; }
     .icon-pol { background: #8247e5; color: white; }
+    .icon-usdt { background: #26a17b; color: white; }
     .icon-roxs { background: var(--gold); color: black; }
 
     .balance-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 12px; }
+    .balance-red { color: var(--error-alt); }
     .max-btn { color: var(--gold); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 11px; }
 
     .arrow-container { display: flex; justify-content: center; margin: -20px 0; position: relative; z-index: 2; }
@@ -104,9 +102,7 @@
       border-radius: 10px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; color: var(--gold); transition: 0.2s;
     }
-    .arrow-btn:hover { transform: rotate(180deg); color: white; }
 
-    /* ERROR MSG */
     .error-banner {
       background: rgba(255, 77, 77, 0.1); border: 1px solid rgba(255, 77, 77, 0.15);
       color: var(--error); padding: 12px; border-radius: 12px; font-size: 13px;
@@ -114,12 +110,6 @@
     }
     .error-banner.show { display: flex; }
 
-    /* STATS */
-    .stats-box { padding: 15px 5px; font-size: 13px; color: var(--muted); }
-    .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .stat-row span:last-child { color: #eee; font-weight: 500; }
-
-    /* ACTION BUTTONS */
     .btn-action {
       width: 100%; padding: 18px; border-radius: 16px; border: none;
       font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px;
@@ -127,21 +117,23 @@
     }
     .btn-connect { background: var(--gold); color: black; }
     .btn-swap { background: var(--gold); color: black; display: none; }
-    .btn-swap:disabled { background: #222; color: #555; cursor: not-allowed; }
 
-    /* WALLET MODAL */
+    /* TOKEN DROPDOWN */
+    .token-dropdown {
+      display: none; position: absolute; top: 100%; left: 0; 
+      background: #1a1a1a; border: 1px solid var(--border);
+      border-radius: 12px; width: 120px; z-index: 10; margin-top: 5px;
+    }
+    .token-dropdown.show { display: block; }
+    .dd-item { padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .dd-item:hover { background: #252525; }
+
     .modal-overlay {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
       backdrop-filter: blur(5px); z-index: 1000; align-items: center; justify-content: center;
     }
     .modal-overlay.open { display: flex; }
     .modal { background: #111; border: 1px solid var(--border); border-radius: 24px; padding: 24px; width: 90%; max-width: 380px; }
-    .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
-    .wallet-item {
-      display: flex; align-items: center; gap: 15px; background: #1a1a1a;
-      padding: 15px; border-radius: 15px; cursor: pointer; margin-bottom: 10px; border: 1px solid transparent;
-    }
-    .wallet-item:hover { border-color: var(--gold); background: #222; }
   </style>
 </head>
 <body>
@@ -168,18 +160,22 @@
       </div>
     </div>
 
-    <div class="token-box" id="sellBox">
+    <div class="token-box">
       <span class="label">Sell</span>
       <div class="input-row">
         <input type="number" class="amount-input" id="valIn" placeholder="0" oninput="calculate()">
-        <div class="token-select">
+        <div class="token-select" onclick="toggleDropdown(event)">
           <div id="iconIn" class="token-icon icon-pol">P</div>
-          <span id="symIn">POL</span>
+          <span id="symIn">POL</span> <small>▼</small>
+          <div class="token-dropdown" id="tokenDd">
+            <div class="dd-item" onclick="selectToken('POL')">POL</div>
+            <div class="dd-item" onclick="selectToken('USDT')">USDT</div>
+          </div>
         </div>
       </div>
       <div class="balance-row">
         <span id="usdIn">$0.00</span>
-        <span>Balance: <span id="balInText">1.00</span> <button class="max-btn" onclick="setMax()">MAX</button></span>
+        <span>Balance: <span id="balInText">0.00</span> <button class="max-btn" id="maxBtn" onclick="setMax()" style="display:none">MAX</button></span>
       </div>
     </div>
 
@@ -187,7 +183,7 @@
       <div class="arrow-btn" onclick="flip()">↓</div>
     </div>
 
-    <div class="token-box" id="buyBox">
+    <div class="token-box">
       <span class="label">Buy</span>
       <div class="input-row">
         <input type="number" class="amount-input" id="valOut" placeholder="0" readonly>
@@ -206,211 +202,109 @@
       ⚠️ Insufficient <span id="errToken">POL</span> balance
     </div>
 
-    <div class="stats-box" id="stats" style="display:none">
-      <div class="stat-row"><span>Exchange Rate</span> <span id="rateText">1 POL = 12.6M ROXs</span></div>
-      <div class="stat-row"><span>Slippage Tolerance</span> <span id="slipText">Auto</span></div>
-      <div class="stat-row"><span>Network Fee</span> <span id="feeText">~$0.01 (Gas: 0.05 POL)</span></div>
-    </div>
-
     <button class="btn-action btn-connect" id="connBtn" onclick="openModal()">Connect Wallet</button>
     <button class="btn-action btn-swap" id="swapBtn" disabled onclick="executeSwap()">Swap</button>
   </div>
 
   <div class="modal-overlay" id="modal">
     <div class="modal">
-      <div class="modal-header">
-        <h3>Connect Wallet</h3>
-        <button style="background:none; border:none; color:white; cursor:pointer;" onclick="closeModal()">✕</button>
-      </div>
-      <div class="wallet-item" onclick="connect('MetaMask')">
-        <span>🦊</span> <b>MetaMask</b>
-      </div>
-      <div class="wallet-item" onclick="connect('WalletConnect')">
-        <span>🔗</span> <b>WalletConnect</b>
-      </div>
+        <h3 style="margin-bottom:20px">Connect Wallet</h3>
+        <button class="btn-action btn-connect" onclick="connect()">MetaMask</button>
+        <button class="btn-action" style="background:#222; color:white; margin-top:10px" onclick="closeModal()">Cancel</button>
     </div>
   </div>
 
 <script>
-  // Logical State based on Image 6 (1 POL balance)
   let state = {
     connected: false,
     tokenIn: 'POL',
     tokenOut: 'ROXs',
-    balances: { POL: 1.00, ROXs: 0.00 }, // User truly has 1 POL
-    prices: { POL: 0.22, ROXs: 0.00000001734 },
-    rate: 12687300,
-    slippage: 'Auto',
-    standardGasCostInToken: { POL: 0.05, ROXs: 0 } // Estimate for MAX calc
+    balances: { POL: 1.00, USDT: 0.00, ROXs: 0.00 }, // Initial Real state
+    prices: { POL: 0.22, USDT: 1.00, ROXs: 0.00000001734 },
+    rate: 12803400,
+    slippage: 'Auto'
   };
-
-  // UI Handlers
-  document.getElementById('setBtn').onclick = (e) => {
-    e.stopPropagation();
-    document.getElementById('setPanel').classList.toggle('open');
-  };
-  document.addEventListener('click', () => document.getElementById('setPanel').classList.remove('open'));
-
-  function setSlippage(val, el) {
-    state.slippage = val;
-    document.querySelectorAll('.slip-opt').forEach(opt => opt.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('slipText').textContent = val === 'Auto' ? 'Auto' : val + '%';
-  }
 
   function calculate() {
     const valIn = parseFloat(document.getElementById('valIn').value) || 0;
     const valInEl = document.getElementById('valIn');
-    const valOutEl = document.getElementById('valOut');
     const swapBtn = document.getElementById('swapBtn');
     const errorMsg = document.getElementById('errorMsg');
-    const stats = document.getElementById('stats');
 
-    // Bidirectional exchange rate based on input currency
-    let pureResult = state.tokenIn === 'POL' ? valIn * state.rate : valIn / state.rate;
-    // Apply 0.3% base fee
-    const amountOut = pureResult * 0.997;
+    let amountOut = state.tokenIn === 'ROXs' ? valIn / state.rate : valIn * state.rate;
+    document.getElementById('valOut').value = amountOut > 0 ? amountOut.toFixed(0) : '';
 
-    if (valIn <= 0) {
-        valOutEl.value = '';
-        valInEl.classList.remove('red-text');
-        stats.style.display = 'none';
-        swapBtn.disabled = true;
-        errorMsg.classList.remove('show');
-        return;
-    }
-
-    valOutEl.value = amountOut.toLocaleString('en-US', {maximumFractionDigits: 0}).replace(/,/g, '');
+    // Insufficient Balance logic
+    const hasEnough = state.connected ? (valIn <= state.balances[state.tokenIn]) : true;
     
-    // Update prices
-    document.getElementById('usdIn').textContent = '$' + (valIn * state.prices[state.tokenIn]).toFixed(2);
-    document.getElementById('usdOut').textContent = '$' + (valIn * state.prices[state.tokenIn] * 0.997).toFixed(2);
-
-    // Insufficient Balance Check
-    const hasEnough = valIn <= state.balances[state.tokenIn];
-    if (!hasEnough) {
-        valInEl.classList.add('red-text'); // Turn input numbers bright red like image 5
+    if (!hasEnough && state.connected) {
+        valInEl.classList.add('red-text');
         errorMsg.classList.add('show');
         document.getElementById('errToken').textContent = state.tokenIn;
         swapBtn.disabled = true;
-        swapBtn.textContent = 'Insufficient Balance';
     } else {
         valInEl.classList.remove('red-text');
         errorMsg.classList.remove('show');
-        swapBtn.disabled = !state.connected;
-        swapBtn.textContent = 'Swap';
+        swapBtn.disabled = !state.connected || valIn <= 0;
     }
 
-    stats.style.display = 'block';
-    // Bidirectional exchange rate display
-    const rateIn = 1;
-    const rateOut = state.tokenIn === 'POL' ? state.rate : (1/state.rate);
-    const inSym = state.tokenIn;
-    const outSym = state.tokenOut;
-    document.getElementById('rateText').textContent = `1 ${inSym} = ${rateOut.toLocaleString()} ${outSym}`;
+    // Dynamic Balance Text color
+    if (state.connected && state.balances[state.tokenIn] === 0) {
+        document.getElementById('balInText').classList.add('balance-red');
+    } else {
+        document.getElementById('balInText').classList.remove('balance-red');
+    }
+  }
+
+  function setMax() {
+    // Deduct standard Polygon gas fee (~0.05 POL) only if selling POL
+    let fee = (state.tokenIn === 'POL') ? 0.05 : 0;
+    let max = state.balances[state.tokenIn] - fee;
+    document.getElementById('valIn').value = max > 0 ? max.toFixed(2) : 0;
+    calculate();
   }
 
   function flip() {
     [state.tokenIn, state.tokenOut] = [state.tokenOut, state.tokenIn];
-    
-    // Update input colors
-    document.getElementById('valIn').classList.remove('red-text');
-    
     document.getElementById('symIn').textContent = state.tokenIn;
     document.getElementById('symOut').textContent = state.tokenOut;
     document.getElementById('iconIn').className = `token-icon icon-${state.tokenIn.toLowerCase()}`;
     document.getElementById('iconOut').className = `token-icon icon-${state.tokenOut.toLowerCase()}`;
-    document.getElementById('iconIn').textContent = state.tokenIn[0];
-    document.getElementById('iconOut').textContent = state.tokenOut[0];
-    
-    updateDisplayedBalances();
-    document.getElementById('valIn').value = '';
+    updateUI();
+  }
+
+  function selectToken(t) {
+    state.tokenIn = t;
+    document.getElementById('symIn').textContent = t;
+    document.getElementById('iconIn').className = `token-icon icon-${t.toLowerCase()}`;
+    document.getElementById('iconIn').textContent = t[0];
+    updateUI();
+  }
+
+  function updateUI() {
+    document.getElementById('balInText').textContent = state.connected ? state.balances[state.tokenIn] + " " + state.tokenIn : "0.00";
+    document.getElementById('balOutText').textContent = state.connected ? state.balances[state.tokenOut] + " " + state.tokenOut : "0.00";
     calculate();
   }
 
-  function setMax() {
-    if (!connected) { openModal(); return; }
-    
-    // LOGIC: Deduct standard gas cost from total balance first
-    const totalBalance = state.balances[state.tokenIn];
-    const gasBufferTokenAmt = state.standardGasCostInToken[state.tokenIn];
-    
-    let maxSpendable = totalBalance - gasBufferTokenAmt;
-    if (maxSpendable < 0) maxSpendable = 0; // Prevent negative spend
-
-    document.getElementById('valIn').value = maxSpendable.toString();
-    calculate();
-  }
-
-  function updateDisplayedBalances() {
-      if (connected) {
-          document.getElementById('balInText').textContent = formatNum(state.balances[state.tokenIn], state.tokenIn);
-          document.getElementById('balOutText').textContent = formatNum(state.balances[state.tokenOut], state.tokenOut);
-      } else {
-          document.getElementById('balInText').textContent = '0.00';
-          document.getElementById('balOutText').textContent = '0.00';
-      }
-  }
-
-  function formatNum(n, token) {
-      if (token === 'ROXs') {
-          if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-          if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-          if (n >= 1e3) return (n / 1e3).toFixed(2) + 'K';
-      }
-      return n.toFixed(2);
-  }
-
-  // CONNECTION LOGIC
-  function openModal() { document.getElementById('modal').classList.add('open'); }
-  function closeModal() { document.getElementById('modal').classList.remove('open'); }
-
-  async function connect(type) {
-    closeModal();
-    if(type === 'MetaMask' && window.ethereum) {
-        try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            onConnected(accounts[0]);
-        } catch (e) { alert("User rejected"); }
-    } else {
-        // Mock for other wallets
-        onConnected("0x71C...8A2");
-    }
-  }
-
-  function onConnected(addr) {
+  function connect() {
     state.connected = true;
+    closeModal();
     document.getElementById('connBtn').style.display = 'none';
     document.getElementById('swapBtn').style.display = 'block';
     document.getElementById('walletDisplay').style.display = 'flex';
-    document.getElementById('addrText').textContent = addr;
-    updateDisplayedBalances();
-    calculate();
+    document.getElementById('maxBtn').style.display = 'inline-block';
+    updateUI();
   }
 
-  function disconnect() {
-    location.reload();
-  }
-
-  function executeSwap() {
-      const btn = document.getElementById('swapBtn');
-      btn.disabled = true;
-      btn.textContent = 'Confirming in Wallet...';
-      btn.classList.add('loading'); // Assumes loading animation exists
-
-      // Real swap via Uniswap router would be integrated here
-      setTimeout(() => {
-          alert("Transaction Sent to Polygon Mainnet!");
-          btn.textContent = 'Swap';
-          btn.classList.remove('loading');
-          btn.disabled = false;
-      }, 2000);
-  }
-
-  // Init
-  window.addEventListener('load', () => {
-    updateDisplayedBalances();
-  });
+  function toggleDropdown(e) { e.stopPropagation(); document.getElementById('tokenDd').classList.toggle('show'); }
+  function openModal() { document.getElementById('modal').classList.add('open'); }
+  function closeModal() { document.getElementById('modal').classList.remove('open'); }
+  window.onclick = () => { 
+    document.getElementById('tokenDd').classList.remove('show');
+    document.getElementById('setPanel').classList.remove('open'); 
+  };
+  document.getElementById('setBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('setPanel').classList.toggle('open'); };
 </script>
 </body>
 </html>
