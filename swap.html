@@ -1,260 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ROXs Swap | Uniswap v2 Backend</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --gold: #F0C040;
-      --bg: #050505;
-      --surface: #0f0f0f;
-      --surface2: #161616;
-      --border: rgba(255,255,255,0.08);
-      --text: #ffffff;
-      --muted: #888;
-      --error-alt: #ff0000; 
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex; flex-direction: column; align-items: center; padding: 20px;
-      min-height: 100vh;
-    }
-
-    /* NAVIGATION */
-    nav {
-      width: 100%; max-width: 440px;
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 2rem;
-    }
-    .nav-logo { font-family: 'Syne', sans-serif; font-weight: 800; color: var(--gold); text-decoration: none; font-size: 22px; }
-    
-    .wallet-status {
-      background: var(--surface2); border: 1px solid var(--border);
-      padding: 8px 16px; border-radius: 50px; cursor: pointer; display: none;
-      align-items: center; gap: 8px; font-size: 13px; color: var(--gold);
-      font-family: 'Syne', sans-serif; font-weight: 600;
-    }
-    .dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; }
-
-    /* SWAP CARD */
-    .swap-card {
-      width: 100%; max-width: 440px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 24px; padding: 20px;
-    }
-
-    .token-box {
-      background: var(--surface2); border-radius: 16px; padding: 16px;
-      margin-bottom: 4px;
-    }
-    .label { font-size: 12px; color: var(--muted); margin-bottom: 12px; display: block; }
-    
-    .input-row { display: flex; justify-content: space-between; align-items: center; }
-    .amount-input {
-      background: none; border: none; color: white; font-size: 30px;
-      font-family: 'Syne', sans-serif; width: 60%; outline: none; font-weight: 600;
-    }
-    .amount-input.red-text { color: var(--error-alt) !important; }
-    
-    .token-select {
-      background: #000; border: 1px solid var(--border); border-radius: 50px;
-      padding: 6px 12px; display: flex; align-items: center; gap: 8px; cursor: pointer;
-      position: relative;
-    }
-    .token-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; }
-    .icon-pol { background: #8247e5; color: white; }
-    .icon-usdt { background: #26a17b; color: white; }
-    .icon-roxs { background: var(--gold); color: black; }
-
-    .balance-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 12px; }
-    .balance-red { color: var(--error-alt); }
-    .max-btn { color: var(--gold); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 11px; }
-
-    .arrow-container { display: flex; justify-content: center; margin: -20px 0; position: relative; z-index: 2; }
-    .arrow-btn {
-      height: 36px; width: 36px; background: var(--surface); border: 4px solid var(--bg);
-      border-radius: 10px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: var(--gold); transition: 0.2s;
-    }
-
-    /* ACTION BUTTONS */
-    .btn-action {
-      width: 100%; padding: 18px; border-radius: 16px; border: none;
-      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px;
-      cursor: pointer; transition: 0.3s; margin-top: 10px;
-    }
-    .btn-connect { background: var(--gold); color: black; }
-    .btn-swap { background: var(--gold); color: black; display: none; }
-    .btn-swap:disabled { background: #222; color: #555; cursor: not-allowed; }
-
-    /* DROP DOWN */
-    .token-dropdown {
-      display: none; position: absolute; top: 105%; left: 0; 
-      background: #1a1a1a; border: 1px solid var(--border);
-      border-radius: 12px; width: 120px; z-index: 10;
-    }
-    .token-dropdown.show { display: block; }
-    .dd-item { padding: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; }
-    .dd-item:hover { background: #252525; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ROXs Swap</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--gold:#F5A623;--gold2:#e8920a;--bg:#0a0e1a;--card:#13161f;--card2:#1c1f2a;--border:rgba(255,255,255,0.07);--text:#fff;--muted:#6b7280;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.bg-grad{position:absolute;inset:0;background:radial-gradient(ellipse at 12% 50%,rgba(245,166,35,0.13) 0%,transparent 48%),radial-gradient(ellipse at 88% 28%,rgba(30,60,200,0.11) 0%,transparent 48%);}
+.coin-wrap{position:absolute;animation:floatCoin ease-in-out infinite;}
+.coin-obj{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;}
+@keyframes floatCoin{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-22px) rotate(8deg);}}
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:15px 40px;border-bottom:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(10px);}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-coin{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F5A623,#C8720A);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:19px;color:#1a0e00;box-shadow:0 0 20px rgba(245,166,35,0.45);}
+.logo-top{display:block;font-size:17px;font-weight:900;color:#fff;letter-spacing:1px;}
+.logo-bot{display:block;font-size:12px;font-weight:700;color:var(--gold);}
+.nav-links{display:flex;gap:2px;}
+.nav-a{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;color:rgba(255,255,255,0.6);text-decoration:none;transition:all .2s;background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;}
+.nav-a:hover,.nav-a.on{color:#fff;background:rgba(255,255,255,0.07);}
+.nav-r{display:flex;align-items:center;gap:8px;}
+.btn-conn{background:linear-gradient(135deg,#F5A623,#e8920a);border:none;border-radius:12px;padding:10px 20px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:#1a0e00;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(245,166,35,0.3);}
+.btn-conn:hover{opacity:.9;transform:translateY(-1px);}
+.w-pill{display:none;align-items:center;gap:7px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;padding:8px 14px;cursor:pointer;}
+.w-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+.w-addr{font-size:13px;font-weight:700;color:rgba(255,255,255,0.8);}
+main{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;padding:50px 16px 60px;}
+.swap-wrap{width:100%;max-width:436px;}
+.swap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.swap-title{font-size:28px;font-weight:900;}
+.s-icon{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,0.4);transition:all .2s;}
+.s-icon:hover{background:rgba(255,255,255,0.1);color:#fff;}
+.slip{display:none;background:rgba(255,255,255,0.03);border-radius:14px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--border);}
+.slip-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.slip-lbl{font-size:12px;color:var(--muted);flex:1;}
+.sb{background:rgba(255,255,255,0.05);border:1px solid transparent;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
+.sb.on,.sb:hover{background:rgba(245,166,35,0.15);border-color:rgba(245,166,35,0.35);color:var(--gold);}
+.sb-inp{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 8px;font-size:12px;color:#fff;width:58px;font-family:'Nunito',sans-serif;outline:none;text-align:center;}
+.sb-inp:focus{border-color:rgba(245,166,35,0.4);}
+.card{background:var(--card);border:1px solid rgba(255,255,255,0.06);border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.5);}
+.card-body{padding:14px 14px 2px;}
+.tbox{background:var(--card2);border-radius:14px;padding:14px;margin-bottom:3px;border:1.5px solid transparent;transition:border-color .2s;}
+.tbox:focus-within{border-color:rgba(245,166,35,0.2);}
+.tbox-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.tbox-lbl{font-size:13px;font-weight:700;color:rgba(255,255,255,0.45);}
+.pcts{display:flex;gap:4px;}
+.pct{background:rgba(255,255,255,0.05);border:none;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
+.pct:hover{background:rgba(245,166,35,0.15);color:var(--gold);}
+.tbox-mid{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.t-inp{background:none;border:none;outline:none;font-family:'Nunito',sans-serif;font-size:32px;font-weight:800;color:#fff;width:54%;}
+.t-inp::placeholder{color:#22253a;}
+.t-inp[readonly]{color:rgba(255,255,255,0.65);cursor:default;}
+.t-inp.bad{color:var(--red);}
+.tok-pill{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:50px;padding:7px 12px 7px 7px;cursor:pointer;transition:all .2s;position:relative;user-select:none;}
+.tok-pill:hover{background:rgba(0,0,0,0.5);border-color:rgba(245,166,35,0.2);}
+.t-icon{width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;}
+.i-pol{background:linear-gradient(135deg,#8247e5,#5a28b8);color:#fff;}
+.i-roxs{background:linear-gradient(135deg,#F5A623,#C8720A);color:#1a0e00;font-size:13px;}
+.i-usdt{background:#26a17b;color:#fff;font-size:9px;}
+.t-sym{font-size:16px;font-weight:800;color:#fff;}
+.t-car{font-size:10px;color:rgba(255,255,255,0.35);margin-left:1px;}
+.tbox-bot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.t-usd{font-size:13px;color:var(--muted);}
+.t-bal{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.max-b{background:rgba(245,166,35,0.15);border:none;border-radius:5px;padding:2px 7px;font-size:11px;font-weight:800;color:var(--gold);cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;display:none;}
+.max-b:hover{background:rgba(245,166,35,0.25);}
+.t-dd{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#16192a;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:6px;min-width:175px;z-index:50;box-shadow:0 20px 50px rgba(0,0,0,0.8);}
+.t-dd.open{display:block;}
+.ddi{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:background .15s;}
+.ddi:hover{background:rgba(245,166,35,0.1);}
+.ddi-sym{font-size:14px;font-weight:800;color:#fff;}
+.ddi-name{font-size:11px;color:var(--muted);}
+.flip-wrap{display:flex;justify-content:center;margin:-3px 0;z-index:2;position:relative;}
+.flip-btn{width:38px;height:38px;background:var(--card2);border:3px solid var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;color:rgba(255,255,255,0.4);transition:all .25s;}
+.flip-btn:hover{color:var(--gold);transform:rotate(180deg);}
+.route{background:rgba(255,255,255,0.025);border-radius:12px;padding:11px 13px;margin:10px 0 0;font-size:13px;font-weight:600;}
+.rr{display:flex;justify-content:space-between;padding:3px 0;color:rgba(255,255,255,0.38);}
+.rr span:last-child{color:rgba(255,255,255,0.72);}
+.rr.g span:last-child{color:var(--gold);}
+.rr.r span:last-child{color:var(--red);}
+.card-foot{padding:14px;}
+.btn-main{width:100%;padding:16px;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:17px;font-weight:800;cursor:pointer;transition:all .2s;}
+.btn-orange{background:linear-gradient(135deg,#F5A623,#e8920a);color:#1a0e00;box-shadow:0 4px 20px rgba(245,166,35,0.3);}
+.btn-orange:hover{opacity:.9;transform:translateY(-1px);}
+.btn-off{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);cursor:not-allowed;border:1px solid rgba(255,255,255,0.05);}
+.btn-warn{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.2);cursor:not-allowed;}
+.powered{text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,0.18);margin-top:10px;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:#13161f;border:1px solid rgba(255,255,255,0.08);border-radius:24px;width:90%;max-width:370px;overflow:hidden;}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.modal-help{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.35);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-tit{font-size:17px;font-weight:800;}
+.modal-x{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.modal-x:hover{background:rgba(255,255,255,0.12);color:#fff;}
+.wlist{padding:10px;}
+.wi{display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:14px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+.wi:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.06);}
+.w-logo{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.wl-wc{background:linear-gradient(135deg,#3b82f6,#1d4ed8);}
+.wl-mm{background:linear-gradient(135deg,#f6851b,#c86a10);}
+.wl-tw{background:linear-gradient(135deg,#3375bb,#1a5aa0);}
+.wl-bn{background:linear-gradient(135deg,#F5A623,#C8720A);}
+.wi-name{font-size:15px;font-weight:800;}
+.wi-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+.wi-badge{margin-left:auto;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;}
+.bg-green{background:rgba(34,197,94,0.12);color:var(--green);}
+.bg-blue{background:rgba(59,130,246,0.12);color:var(--blue);}
+.wi-arr{color:rgba(255,255,255,0.2);margin-left:auto;font-size:16px;}
+.modal-ftr{padding:13px 18px;border-top:1px solid rgba(255,255,255,0.04);text-align:center;font-size:12px;color:rgba(255,255,255,0.18);}
+footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px solid rgba(255,255,255,0.04);padding:40px 60px 28px;}
+.foot-grid{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:30px;}
+.fb-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.fb-coin{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F5A623,#C8720A);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#1a0e00;}
+.fb-name{font-size:19px;font-weight:900;}
+.fb-name span{color:var(--gold);}
+.fb-copy{font-size:13px;color:var(--muted);}
+.foot-cols{display:flex;gap:60px;}
+.fc h4{font-size:13px;font-weight:800;color:rgba(255,255,255,0.4);margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase;}
+.fc a{display:block;font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:9px;transition:color .2s;}
+.fc a:hover{color:#fff;}
+.socials{display:flex;gap:12px;margin-top:20px;}
+.soc{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:rgba(255,255,255,0.5);text-decoration:none;transition:all .2s;}
+.soc:hover{background:rgba(255,255,255,0.12);color:#fff;}
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px 20px;font-size:14px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:300;white-space:nowrap;}
+.toast.show{opacity:1;}
+@media(max-width:600px){nav{padding:14px 16px;}.nav-links{display:none;}footer{padding:30px 20px 24px;}.foot-cols{gap:30px;}.foot-grid{flex-direction:column;}}
+</style>
 </head>
 <body>
-
-  <nav>
-    <a href="#" class="nav-logo">ROXs</a>
-    <div class="wallet-status" id="walletDisplay" onclick="disconnect()">
-      <div class="dot"></div>
-      <span id="addrText">0x...</span>
+<div class="bg"><div class="bg-grad"></div><div id="bgCoins"></div></div>
+<nav>
+  <a class="logo" href="index.html">
+    <div class="logo-coin">R</div>
+    <div><span class="logo-top">ROXs</span><span class="logo-bot">Swap</span></div>
+  </a>
+  <div class="nav-links">
+    <a class="nav-a on" href="swap.html">Swap</a>
+    <a class="nav-a" href="index.html">Home</a>
+    <a class="nav-a" href="https://x.com/ROXsCoin" target="_blank">Twitter ↗</a>
+    <a class="nav-a" href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">Contract ↗</a>
+  </div>
+  <div class="nav-r">
+    <div class="s-icon" onclick="toggleSlip()" title="Settings">⚙</div>
+    <div class="w-pill" id="wPill" onclick="disconnect()">
+      <div class="w-dot"></div><span class="w-addr" id="wAddr"></span>
     </div>
-  </nav>
-
-  <div class="swap-card">
-    <div class="token-box">
-      <span class="label">Sell</span>
-      <div class="input-row">
-        <input type="number" class="amount-input" id="valIn" placeholder="0" oninput="calculate()">
-        <div class="token-select" onclick="toggleDropdown(event)">
-          <div id="iconIn" class="token-icon icon-pol">P</div>
-          <span id="symIn">POL</span> <small>▼</small>
-          <div class="token-dropdown" id="tokenDd">
-            <div class="dd-item" onclick="selectToken('POL')">POL</div>
-            <div class="dd-item" onclick="selectToken('USDT')">USDT</div>
+    <button class="btn-conn" id="btnConn" onclick="openModal()">Connect</button>
+  </div>
+</nav>
+<main>
+  <div class="swap-wrap">
+    <div class="swap-head">
+      <span class="swap-title">Swap</span>
+      <div class="s-icon" onclick="toggleSlip()">⚙</div>
+    </div>
+    <div class="slip" id="slipPanel">
+      <div class="slip-row">
+        <span class="slip-lbl">Max. slippage</span>
+        <button class="sb on" onclick="setSlip(this,'auto')">Auto</button>
+        <button class="sb" onclick="setSlip(this,0.5)">0.5%</button>
+        <button class="sb" onclick="setSlip(this,1)">1%</button>
+        <button class="sb" onclick="setSlip(this,2)">2%</button>
+        <button class="sb" onclick="setSlip(this,5.5)">5.5%</button>
+        <input class="sb-inp" id="slipCustom" type="number" min="0.1" max="5.5" placeholder="%" oninput="setSlipCustom(this)"/>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="tbox">
+          <div class="tbox-top">
+            <span class="tbox-lbl">Sell</span>
+            <div class="pcts">
+              <button class="pct" onclick="setPct(25)">25%</button>
+              <button class="pct" onclick="setPct(50)">50%</button>
+              <button class="pct" onclick="setPct(75)">75%</button>
+              <button class="pct" onclick="setPct(100)">MAX</button>
+            </div>
+          </div>
+          <div class="tbox-mid">
+            <input class="t-inp" id="amtIn" type="number" min="0" placeholder="0.00" oninput="calc()"/>
+            <div class="tok-pill" id="fromPill" onclick="toggleDd('fromDd')">
+              <div class="t-icon i-pol" id="fromIcon">POL</div>
+              <span class="t-sym" id="fromSym">POL</span>
+              <span class="t-car">▼</span>
+              <div class="t-dd" id="fromDd">
+                <div class="ddi" onclick="pickFrom('POL');event.stopPropagation()"><div class="t-icon i-pol">POL</div><div><div class="ddi-sym">POL</div><div class="ddi-name">Polygon</div></div></div>
+                <div class="ddi" onclick="pickFrom('USDT');event.stopPropagation()"><div class="t-icon i-usdt">USDT</div><div><div class="ddi-sym">USDT</div><div class="ddi-name">Tether USD</div></div></div>
+                <div class="ddi" onclick="pickFrom('ROXs');event.stopPropagation()"><div class="t-icon i-roxs">R</div><div><div class="ddi-sym">ROXs</div><div class="ddi-name">ROXs Coin</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="tbox-bot">
+            <span class="t-usd" id="inUsd">$0.00</span>
+            <span class="t-bal"><span id="balIn">0.00</span><button class="max-b" id="maxBtn" onclick="setPct(100)">MAX</button></span>
           </div>
         </div>
-      </div>
-      <div class="balance-row">
-        <span>$0.00</span>
-        <span>Balance: <span id="balInText">0.00</span> <button class="max-btn" id="maxBtn" onclick="setMax()" style="display:none">MAX</button></span>
-      </div>
-    </div>
-
-    <div class="arrow-container">
-      <div class="arrow-btn" onclick="flip()">↓</div>
-    </div>
-
-    <div class="token-box">
-      <span class="label">Buy</span>
-      <div class="input-row">
-        <input type="number" class="amount-input" id="valOut" placeholder="0" readonly>
-        <div class="token-select">
-          <div id="iconOut" class="token-icon icon-roxs">R</div>
-          <span id="symOut">ROXs</span>
+        <div class="flip-wrap"><button class="flip-btn" onclick="flip()">⇅</button></div>
+        <div class="tbox">
+          <div class="tbox-top"><span class="tbox-lbl">Buy</span></div>
+          <div class="tbox-mid">
+            <input class="t-inp" id="amtOut" type="number" placeholder="0.00" readonly/>
+            <div class="tok-pill" onclick="toggleDd('toDd')">
+              <div class="t-icon i-roxs" id="toIcon">R</div>
+              <span class="t-sym" id="toSym">ROXs</span>
+              <span class="t-car">▼</span>
+              <div class="t-dd" id="toDd">
+                <div class="ddi" onclick="pickTo('ROXs');event.stopPropagation()"><div class="t-icon i-roxs">R</div><div><div class="ddi-sym">ROXs</div><div class="ddi-name">ROXs Coin</div></div></div>
+                <div class="ddi" onclick="pickTo('POL');event.stopPropagation()"><div class="t-icon i-pol">POL</div><div><div class="ddi-sym">POL</div><div class="ddi-name">Polygon</div></div></div>
+                <div class="ddi" onclick="pickTo('USDT');event.stopPropagation()"><div class="t-icon i-usdt">USDT</div><div><div class="ddi-sym">USDT</div><div class="ddi-name">Tether USD</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="tbox-bot">
+            <span class="t-usd" id="outUsd">$0.00</span>
+            <span class="t-bal" id="balOut">0.00</span>
+          </div>
+        </div>
+        <div class="route" id="routeBox" style="display:none">
+          <div class="rr g"><span>Rate</span><span id="rRate">—</span></div>
+          <div class="rr" id="impRow"><span>Price Impact</span><span id="rImpact">—</span></div>
+          <div class="rr"><span>Min. received</span><span id="rMin">—</span></div>
+          <div class="rr"><span>Route</span><span id="rRoute">—</span></div>
+          <div class="rr"><span>Network fee</span><span>~$0.01</span></div>
         </div>
       </div>
-      <div class="balance-row">
-        <span>$0.00</span>
-        <span>Balance: <span id="balOutText">0.00</span></span>
+      <div class="card-foot">
+        <button class="btn-main btn-orange" id="mainBtn" onclick="openModal()">Connect Wallet</button>
+        <div class="powered">Powered by Uniswap v2 · Polygon</div>
       </div>
     </div>
-
-    <button class="btn-action btn-connect" id="connBtn" onclick="connect()">Connect Wallet</button>
-    <button class="btn-action btn-swap" id="swapBtn" disabled onclick="executeRealSwap()">Swap</button>
   </div>
-
+</main>
+<div class="overlay" id="walletModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <button class="modal-help">?</button>
+      <span class="modal-tit">Connect Wallet</span>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="wlist">
+      <div class="wi" onclick="connectWallet('WalletConnect')"><div class="w-logo wl-wc">🔗</div><div><div class="wi-name">WalletConnect</div><div class="wi-desc">Scan with any wallet</div></div><span class="wi-badge bg-blue">QR CODE</span><span class="wi-arr">›</span></div>
+      <div class="wi" onclick="connectWallet('MetaMask')"><div class="w-logo wl-mm">🦊</div><div><div class="wi-name">MetaMask</div><div class="wi-desc">Browser extension</div></div><span class="wi-badge bg-green" id="mmBadge">DETECT</span><span class="wi-arr">›</span></div>
+      <div class="wi" onclick="connectWallet('Trust Wallet')"><div class="w-logo wl-tw">🛡️</div><div><div class="wi-name">Trust Wallet</div><div class="wi-desc">Mobile & browser</div></div><span class="wi-arr">›</span></div>
+      <div class="wi" onclick="connectWallet('Binance')"><div class="w-logo wl-bn">◈</div><div><div class="wi-name">Binance Wallet</div><div class="wi-desc">Binance Web3 Wallet</div></div><span class="wi-arr">›</span></div>
+    </div>
+    <div class="modal-ftr">UX by ROXs Swap · Polygon Network</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<footer>
+  <div class="foot-grid">
+    <div>
+      <div class="fb-logo"><div class="fb-coin">R</div><div class="fb-name">ROXs <span>Swap</span></div></div>
+      <div class="fb-copy">2025 ROXs Coin © All Rights Reserved.</div>
+      <div class="socials">
+        <a class="soc" href="https://x.com/ROXsCoin" target="_blank">𝕏</a>
+        <a class="soc" href="#" target="_blank">✈</a>
+        <a class="soc" href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">⬡</a>
+      </div>
+    </div>
+    <div class="foot-cols">
+      <div class="fc"><h4>Ecosystem</h4><a href="swap.html">Swap</a><a href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">Contract</a><a href="https://dex.coinmarketcap.com/token/polygon/0x94cf8a3041fca3c7b96d71269b3f9d4c4a07d05e" target="_blank">DexScan</a></div>
+      <div class="fc"><h4>Info</h4><a href="https://x.com/ROXsCoin" target="_blank">Twitter / X</a><a href="#">Telegram</a><a href="https://roxscoinofficial.github.io">Website</a></div>
+    </div>
+  </div>
+</footer>
 <script>
-  const ROXS_CONTRACT = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
-  const USDT_CONTRACT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"; // Polygon USDT
+const ROXS='0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
+const USDT_ADDR='0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+const POLY='0x89';
+let s={connected:false,addr:'',from:'POL',to:'ROXs',bal:{POL:0,USDT:0,ROXs:0},prices:{POL:0.22,USDT:1.0,ROXs:0.000000007158},slip:'auto',slipVal:0.5,slipOpen:false};
+const IC={POL:'i-pol',USDT:'i-usdt',ROXs:'i-roxs'};
+const IT={POL:'POL',USDT:'USDT',ROXs:'R'};
 
-  let state = {
-    connected: false,
-    tokenIn: 'POL',
-    tokenOut: 'ROXs',
-    balances: { POL: 0.00, USDT: 0.00, ROXs: 0.00 },
-    rate: 12803400 // Current rate from Uniswap v2
-  };
+// Floating coins
+(function(){const bg=document.getElementById('bgCoins');const cfg=[{s:70,l:'7%',t:'40%',d:6},{s:52,l:'3%',t:'72%',d:8},{s:80,r:'8%',t:'22%',d:7},{s:55,r:'5%',t:'62%',d:9},{s:44,r:'16%',t:'82%',d:5}];cfg.forEach(c=>{const w=document.createElement('div');w.className='coin-wrap';w.style.cssText=(c.l?'left:'+c.l+';':'')+(c.r?'right:'+c.r+';':'')+'top:'+c.t+';animation-duration:'+c.d+'s;animation-delay:'+(Math.random()*3).toFixed(1)+'s;';const o=document.createElement('div');o.className='coin-obj';o.style.cssText='width:'+c.s+'px;height:'+c.s+'px;background:radial-gradient(circle at 35% 35%,#F5A623,#9a5500);font-size:'+(c.s*0.38)+'px;color:#1a0e00;box-shadow:0 8px 30px rgba(0,0,0,0.5),inset 0 2px 4px rgba(255,255,255,0.15);';o.textContent='R';w.appendChild(o);bg.appendChild(w);});})();
 
-  async function connect() {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        state.connected = true;
-        state.balances.POL = 1.00; // Mocking 1 POL for your current test
-        
-        document.getElementById('connBtn').style.display = 'none';
-        document.getElementById('swapBtn').style.display = 'block';
-        document.getElementById('walletDisplay').style.display = 'flex';
-        document.getElementById('addrText').textContent = accounts[0].substring(0,6) + "..." + accounts[0].substring(38);
-        document.getElementById('maxBtn').style.display = 'inline-block';
-        updateUI();
-      } catch (e) { console.log("Connection rejected"); }
-    } else {
-      alert("Please install MetaMask to connect.");
-    }
-  }
+// Fetch prices
+(async function(){try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network,tether&vs_currencies=usd');const d=await r.json();if(d['matic-network'])s.prices.POL=d['matic-network'].usd;}catch(e){}})();
 
-  function disconnect() {
-    state.connected = false;
-    document.getElementById('connBtn').style.display = 'block';
-    document.getElementById('swapBtn').style.display = 'none';
-    document.getElementById('walletDisplay').style.display = 'none';
-    document.getElementById('maxBtn').style.display = 'none';
-    updateUI();
-  }
-
-  function calculate() {
-    const valIn = parseFloat(document.getElementById('valIn').value) || 0;
-    const valInEl = document.getElementById('valIn');
-    const swapBtn = document.getElementById('swapBtn');
-
-    let out = state.tokenIn === 'ROXs' ? valIn / state.rate : valIn * state.rate;
-    document.getElementById('valOut').value = out > 0 ? out.toFixed(0) : '';
-
-    if (state.connected) {
-      const hasEnough = valIn <= state.balances[state.tokenIn];
-      valInEl.classList.toggle('red-text', !hasEnough);
-      swapBtn.disabled = !hasEnough || valIn <= 0;
-      swapBtn.textContent = hasEnough ? 'Swap' : `Insufficient ${state.tokenIn} balance`;
-    }
-  }
-
-  function setMax() {
-    let fee = state.tokenIn === 'POL' ? 0.05 : 0;
-    let max = state.balances[state.tokenIn] - fee;
-    document.getElementById('valIn').value = max > 0 ? max.toFixed(2) : 0;
-    calculate();
-  }
-
-  function flip() {
-    [state.tokenIn, state.tokenOut] = [state.tokenOut, state.tokenIn];
-    document.getElementById('symIn').textContent = state.tokenIn;
-    document.getElementById('symOut').textContent = state.tokenOut;
-    document.getElementById('iconIn').className = `token-icon icon-${state.tokenIn.toLowerCase()}`;
-    document.getElementById('iconOut').className = `token-icon icon-${state.tokenOut.toLowerCase()}`;
-    updateUI();
-  }
-
-  function selectToken(t) {
-    state.tokenIn = t;
-    document.getElementById('symIn').textContent = t;
-    document.getElementById('iconIn').className = `token-icon icon-${t.toLowerCase()}`;
-    updateUI();
-  }
-
-  function updateUI() {
-    document.getElementById('balInText').textContent = state.connected ? state.balances[state.tokenIn] : "0.00";
-    document.getElementById('balOutText').textContent = state.connected ? state.balances[state.tokenOut] : "0.00";
-    document.getElementById('balInText').classList.toggle('balance-red', state.connected && state.balances[state.tokenIn] === 0);
-    calculate();
-  }
-
-  function executeRealSwap() {
-    const amt = document.getElementById('valIn').value;
-    const inputToken = state.tokenIn === 'POL' ? 'ETH' : (state.tokenIn === 'USDT' ? USDT_CONTRACT : ROXS_CONTRACT);
-    const outputToken = state.tokenOut === 'ROXs' ? ROXS_CONTRACT : 'ETH';
-
-    // Deep link to Uniswap v2 on Polygon using the contract
-    const url = `https://app.uniswap.org/#/swap?inputCurrency=${inputToken}&outputCurrency=${outputToken}&exactAmount=${amt}&chain=polygon&use=V2`;
-    window.open(url, '_blank');
-  }
-
-  function toggleDropdown(e) { e.stopPropagation(); document.getElementById('tokenDd').classList.toggle('show'); }
-  window.onclick = () => { document.getElementById('tokenDd').classList.remove('show'); };
+function toggleSlip(){s.slipOpen=!s.slipOpen;document.getElementById('slipPanel').style.display=s.slipOpen?'block':'none';}
+function setSlip(btn,val){document.querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('slipCustom').value='';s.slip=val;s.slipVal=val==='auto'?0.5:parseFloat(val);calc();}
+function setSlipCustom(inp){let v=parseFloat(inp.value);if(v>5.5){v=5.5;inp.value=5.5;}if(v<0.1)return;document.querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));s.slip=v;s.slipVal=v;calc();}
+function pickFrom(t){if(t===s.to){flip();return;}s.from=t;updatePills();clearAmts();updateBals();closeAllDd();}
+function pickTo(t){if(t===s.from){flip();return;}s.to=t;updatePills();clearAmts();updateBals();closeAllDd();}
+function flip(){[s.from,s.to]=[s.to,s.from];updatePills();clearAmts();updateBals();}
+function updatePills(){document.getElementById('fromIcon').className='t-icon '+IC[s.from];document.getElementById('fromIcon').textContent=IT[s.from];document.getElementById('fromSym').textContent=s.from;document.getElementById('toIcon').className='t-icon '+IC[s.to];document.getElementById('toIcon').textContent=IT[s.to];document.getElementById('toSym').textContent=s.to;}
+function clearAmts(){document.getElementById('amtIn').value='';document.getElementById('amtOut').value='';document.getElementById('inUsd').textContent='$0.00';document.getElementById('outUsd').textContent='$0.00';document.getElementById('routeBox').style.display='none';document.getElementById('amtIn').classList.remove('bad');updateBtn();}
+function setPct(pct){if(!s.connected){openModal();return;}let bal=s.bal[s.from]||0;if(bal<=0){toast('No balance');return;}let amt=bal*pct/100;if(s.from==='POL')amt=Math.max(0,amt-0.02);document.getElementById('amtIn').value=parseFloat(amt.toFixed(8));calc();}
+function calc(){const amtIn=parseFloat(document.getElementById('amtIn').value)||0;if(amtIn<=0){clearAmts();return;}const inP=s.prices[s.from],outP=s.prices[s.to];const inUsd=amtIn*inP;const fee=s.from==='ROXs'?0.04:0.02;const rawOut=(inUsd/outP)*(1-fee);const minOut=rawOut*(1-s.slipVal/100);const impact=inUsd>50?2.5:inUsd>10?0.8:0.3;document.getElementById('amtOut').value=fmtAmt(rawOut,s.to);document.getElementById('inUsd').textContent='$'+fmtUsd(inUsd);document.getElementById('outUsd').textContent='$'+fmtUsd(rawOut*outP);document.getElementById('rRate').textContent='1 '+s.from+' = '+fmtAmt(inP/outP,s.to)+' '+s.to;document.getElementById('rImpact').textContent='~'+impact+'%';document.getElementById('rMin').textContent=fmtAmt(minOut,s.to)+' '+s.to;document.getElementById('rRoute').textContent=s.from+' → '+s.to+' (v2)';document.getElementById('impRow').className=impact>2?'rr r':'rr';document.getElementById('routeBox').style.display='block';const insuf=s.connected&&amtIn>(s.bal[s.from]||0);document.getElementById('amtIn').classList.toggle('bad',insuf);updateBtn(insuf);}
+function fmtAmt(n,tok){if(tok==='ROXs'){if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1000)return Math.round(n).toLocaleString();return n.toFixed(0);}if(n>=1e6)return(n/1e6).toFixed(4)+'M';if(n>=1)return n.toFixed(4);return n.toFixed(8);}
+function fmtUsd(n){return n<0.0001?n.toFixed(8):n<1?n.toFixed(4):n.toFixed(2);}
+function fmtBal(n,tok){if(tok==='ROXs')return fmtAmt(n,'ROXs');return n.toFixed(4);}
+function updateBtn(insuf){const btn=document.getElementById('mainBtn');const amtIn=parseFloat(document.getElementById('amtIn').value)||0;if(!s.connected){btn.textContent='Connect Wallet';btn.className='btn-main btn-orange';btn.onclick=openModal;}else if(amtIn<=0){btn.textContent='Enter an amount';btn.className='btn-main btn-off';btn.onclick=null;}else if(insuf){btn.textContent='Insufficient '+s.from+' balance';btn.className='btn-main btn-warn';btn.onclick=null;}else{btn.textContent='Swap';btn.className='btn-main btn-orange';btn.onclick=doSwap;}}
+function updateBals(){document.getElementById('balIn').textContent=s.connected?fmtBal(s.bal[s.from],s.from):'0.00';document.getElementById('balOut').textContent=s.connected?fmtBal(s.bal[s.to],s.to):'0.00';}
+function openModal(){document.getElementById('walletModal').classList.add('open');}
+function closeModal(){document.getElementById('walletModal').classList.remove('open');}
+async function connectWallet(type){closeModal();if(type==='MetaMask'&&window.ethereum){try{const accs=await window.ethereum.request({method:'eth_requestAccounts'});if(accs.length){s.addr=accs[0];await switchPoly();await loadBals(s.addr);onConn(s.addr);return;}}catch(e){toast('Rejected');return;}}if(type!=='MetaMask'){window.open('https://app.uniswap.org/swap?inputCurrency=ETH&outputCurrency='+ROXS+'&chain=polygon','_blank');toast('Opening '+type+'...');return;}toast('Install MetaMask first');}
+async function switchPoly(){if(!window.ethereum)return;try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:POLY}]});}catch(e){if(e.code===4902)await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:POLY,chainName:'Polygon Mainnet',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-rpc.com/'],blockExplorerUrls:['https://polygonscan.com/']}]});}}
+async function loadBals(addr){try{const polH=await window.ethereum.request({method:'eth_getBalance',params:[addr,'latest']});s.bal.POL=parseInt(polH,16)/1e18;const d='0x70a08231'+addr.replace('0x','').padStart(64,'0');const rH=await window.ethereum.request({method:'eth_call',params:[{to:ROXS,data:d},'latest']});s.bal.ROXs=parseInt(rH,16)/1e18;const uH=await window.ethereum.request({method:'eth_call',params:[{to:USDT_ADDR,data:d},'latest']});s.bal.USDT=parseInt(uH,16)/1e6;updateBals();}catch(e){console.log(e);}}
+function onConn(addr){s.connected=true;const sh=addr.slice(0,6)+'...'+addr.slice(-4);document.getElementById('wAddr').textContent=sh;document.getElementById('wPill').style.display='flex';document.getElementById('btnConn').style.display='none';document.getElementById('maxBtn').style.display='inline-block';if(window.ethereum)document.getElementById('mmBadge').textContent='INSTALLED';updateBals();updateBtn();toast('Wallet connected!');}
+function disconnect(){s.connected=false;s.addr='';s.bal={POL:0,USDT:0,ROXs:0};document.getElementById('wPill').style.display='none';document.getElementById('btnConn').style.display='block';document.getElementById('maxBtn').style.display='none';updateBals();updateBtn();toast('Disconnected');}
+async function doSwap(){const amt=document.getElementById('amtIn').value;if(!s.connected||!amt)return;const inA=s.from==='POL'?'ETH':s.from==='USDT'?USDT_ADDR:ROXS;const outA=s.to==='POL'?'ETH':s.to==='USDT'?USDT_ADDR:ROXS;window.open('https://app.uniswap.org/swap?inputCurrency='+inA+'&outputCurrency='+outA+'&exactAmount='+amt+'&exactField=input&chain=polygon&use=V2','_blank');toast('Opening Uniswap to confirm...');}
+function toggleDd(id){const el=document.getElementById(id);const was=el.classList.contains('open');closeAllDd();if(!was)el.classList.add('open');}
+function closeAllDd(){document.querySelectorAll('.t-dd').forEach(d=>d.classList.remove('open'));}
+document.addEventListener('click',closeAllDd);
+document.getElementById('walletModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+window.addEventListener('load',async()=>{if(window.ethereum){document.getElementById('mmBadge').textContent='INSTALLED';if(window.ethereum.selectedAddress){s.addr=window.ethereum.selectedAddress;await switchPoly();await loadBals(s.addr);onConn(s.addr);}window.ethereum.on('accountsChanged',async a=>{if(a.length){s.addr=a[0];await loadBals(s.addr);onConn(s.addr);}else disconnect();});window.ethereum.on('chainChanged',()=>location.reload());}});
 </script>
 </body>
 </html>
