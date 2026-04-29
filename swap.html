@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ROXs Swap</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--gold:#F5A623;--gold2:#e8920a;--bg:#0a0e1a;--card:#13161f;--card2:#1c1f2a;--border:rgba(255,255,255,0.07);--text:#fff;--muted:#6b7280;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;}
@@ -305,7 +306,24 @@ async function switchPoly(){if(!window.ethereum)return;try{await window.ethereum
 async function loadBals(addr){try{const polH=await window.ethereum.request({method:'eth_getBalance',params:[addr,'latest']});s.bal.POL=parseInt(polH,16)/1e18;const d='0x70a08231'+addr.replace('0x','').padStart(64,'0');const rH=await window.ethereum.request({method:'eth_call',params:[{to:ROXS,data:d},'latest']});s.bal.ROXs=parseInt(rH,16)/1e18;const uH=await window.ethereum.request({method:'eth_call',params:[{to:USDT_ADDR,data:d},'latest']});s.bal.USDT=parseInt(uH,16)/1e6;updateBals();}catch(e){console.log(e);}}
 function onConn(addr){s.connected=true;const sh=addr.slice(0,6)+'...'+addr.slice(-4);document.getElementById('wAddr').textContent=sh;document.getElementById('wPill').style.display='flex';document.getElementById('btnConn').style.display='none';document.getElementById('maxBtn').style.display='inline-block';if(window.ethereum)document.getElementById('mmBadge').textContent='INSTALLED';updateBals();updateBtn();toast('Wallet connected!');}
 function disconnect(){s.connected=false;s.addr='';s.bal={POL:0,USDT:0,ROXs:0};document.getElementById('wPill').style.display='none';document.getElementById('btnConn').style.display='block';document.getElementById('maxBtn').style.display='none';updateBals();updateBtn();toast('Disconnected');}
-async function doSwap(){const amt=document.getElementById('amtIn').value;if(!s.connected||!amt)return;const inA=s.from==='POL'?'ETH':s.from==='USDT'?USDT_ADDR:ROXS;const outA=s.to==='POL'?'ETH':s.to==='USDT'?USDT_ADDR:ROXS;window.open('https://app.uniswap.org/swap?inputCurrency='+inA+'&outputCurrency='+outA+'&exactAmount='+amt+'&exactField=input&chain=polygon&use=V2','_blank');toast('Opening Uniswap to confirm...');}
+async function doSwap(){
+    const amt = document.getElementById('amtIn').value;
+    if(!s.connected || !amt) return;
+
+    try {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        
+        toast("Iniciando en Uniswap...");
+        
+        const inA = s.from === 'POL' ? 'ETH' : (s.from === 'USDT' ? USDT_ADDR : ROXS);
+        const outA = s.to === 'POL' ? 'ETH' : (s.to === 'USDT' ? USDT_ADDR : ROXS);
+        
+        window.open(`https://app.uniswap.org/swap?inputCurrency=${inA}&outputCurrency=${outA}&exactAmount=${amt}&chain=polygon&use=V2`, '_blank');
+    } catch (e) {
+        toast("Error al conectar");
+    }
+}
 function toggleDd(id){const el=document.getElementById(id);const was=el.classList.contains('open');closeAllDd();if(!was)el.classList.add('open');}
 function closeAllDd(){document.querySelectorAll('.t-dd').forEach(d=>d.classList.remove('open'));}
 document.addEventListener('click',closeAllDd);
