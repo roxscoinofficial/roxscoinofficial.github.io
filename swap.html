@@ -280,676 +280,162 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
 </footer>
 
 <script>
-// ─── CONTRACT ADDRESSES ───────────────────────────────────────────────────────
-const ROXS_ADDR  = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
-const USDT_ADDR  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
-const POLY_CHAIN = '0x89'; // Polygon Mainnet
+// ─── CONFIG ─────────────────────────────────────────
+const ROUTER = "0xa5E0829CaCED8fFDD4De3c43696c57F7D7A678ff"; // QuickSwap / Uniswap V2 Polygon
+const ROXS   = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
+const USDT   = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
 
-// ─── REAL UNISWAP v2 RATES (from live on-chain captures) ─────────────────────
-//
-// All values verified from actual Uniswap UI screenshots:
-//
-// BUY ROXs (paying → receiving):
-//   1.00  POL  → 12,687,300 ROXs
-//   0.94  POL  → 11,927,200 ROXs   ← MAX trade with gas reserve
-//   1.00  USDT → 134,577,000 ROXs
-//
-// SELL ROXs (paying ROXs → receiving):
-//   12,803,400 ROXs → 1.00 POL
-//   12,034,000 ROXs → 0.94 POL     ← MAX trade (fee included)
-//   140,666,000 ROXs → 1.00 USDT
-//
-// Effective rates per unit:
-//   POL  → ROXs:  12,687,300 per POL   (buy side)
-//   ROXs → POL:   1 / 12,802,128 per ROXs  (sell side, avg from captures)
-//   USDT → ROXs:  134,577,000 per USDT  (buy side)
-//   ROXs → USDT:  1 / 140,666,000 per ROXs (sell side)
-//
-// POL/USDT via implied price: 1 POL ≈ $0.0928 (from 1 POL = 12802200 ROXs, 1 USDT = 134577000 ROXs)
-//
-// The bid/ask spread represents the Uniswap 0.3% LP fee + AMM price impact.
-// We model this with separate buy/sell rate tables instead of a single price.
+// ─── STATE ─────────────────────────────────────────
+let provider, signer, router, account;
 
-const RATES = {
-  // How many output tokens per 1 input token — buy direction (paying non-ROXs)
-  BUY: {
-    'POL_ROXs':  12687300,
-    'USDT_ROXs': 134577000,
-    'POL_USDT':  0.0928,          // implied from pool
-    'USDT_POL':  1 / 0.0928,
-  },
-  // How many output tokens per 1 input token — sell direction (paying ROXs)
-  SELL: {
-    'ROXs_POL':  1 / 12802128,    // avg: 12803400 & 12034000/0.94
-    'ROXs_USDT': 1 / 140666000,
-  },
-};
-
-// Unified lookup: returns base rate for FROM→TO
-function getBaseRate(from, to) {
-  const key = from + '_' + to;
-  if (RATES.BUY[key]  !== undefined) return RATES.BUY[key];
-  if (RATES.SELL[key] !== undefined) return RATES.SELL[key];
-  return null;
-}
-
-// USD prices for display only (derived from pool ratios)
-const USD_PRICES = {
-  POL:  0.0928,
-  USDT: 1.0,
-  ROXs: 0.0928 / 12802128,   // ≈ $0.00000000725
-};
-
-// Icon classes and display text per token
-const IC = { POL: 'i-pol', USDT: 'i-usdt', ROXs: 'i-roxs' };
-const IT = { POL: 'POL', USDT: 'USDT', ROXs: 'R' };
-
-// ─── APP STATE ────────────────────────────────────────────────────────────────
-let s = {
-  connected: false,
-  addr: '',
-  from: 'POL',
-  to: 'ROXs',
-  bal: { POL: 0, USDT: 0, ROXs: 0 },
-  slip: 'auto',
-  slipVal: 0.5,   // default slippage %
-  slipOpen: false,
-};
-
-// ─── RATE ENGINE ─────────────────────────────────────────────────────────────
-// Calibrated from real Uniswap captures:
-//   1.00 POL -> 12,687,300 ROXs | 0.94 POL -> 11,927,200 ROXs
-//   12,803,400 ROXs -> 1 POL    | 12,034,000 ROXs -> 0.94 POL
-//   1 USDT -> 134,577,000 ROXs  | 140,666,000 ROXs -> 1 USDT
-function getOutputAmount(from, to, amtIn) {
-  const baseRate = getBaseRate(from, to);
-  if (baseRate === null) return null;
-
-  const usdIn = amtIn * USD_PRICES[from];
-  let impactPct;
-  if (usdIn > 500)      impactPct = 3.0;
-  else if (usdIn > 100) impactPct = 1.5;
-  else if (usdIn > 10)  impactPct = 0.5;
-  else                  impactPct = 0.3;
-
-  const rawOut = amtIn * baseRate * (1 - impactPct / 100);
-  return { rawOut, impact: impactPct };
-}
-
-// ─── FLOATING BACKGROUND COINS ───────────────────────────────────────────────
-(function () {
-  const bg = document.getElementById('bgCoins');
-  const cfg = [
-    { s: 70, l: '7%', t: '40%', d: 6 },
-    { s: 52, l: '3%', t: '72%', d: 8 },
-    { s: 80, r: '8%', t: '22%', d: 7 },
-    { s: 55, r: '5%', t: '62%', d: 9 },
-    { s: 44, r: '16%', t: '82%', d: 5 },
-  ];
-  cfg.forEach(c => {
-    const w = document.createElement('div');
-    w.className = 'coin-wrap';
-    w.style.cssText = (c.l ? 'left:' + c.l + ';' : '') + (c.r ? 'right:' + c.r + ';' : '') + 'top:' + c.t + ';animation-duration:' + c.d + 's;animation-delay:' + (Math.random() * 3).toFixed(1) + 's;';
-    const o = document.createElement('div');
-    o.className = 'coin-obj';
-    o.style.cssText = 'width:' + c.s + 'px;height:' + c.s + 'px;background:radial-gradient(circle at 35% 35%,#F5A623,#9a5500);font-size:' + (c.s * 0.38) + 'px;color:#1a0e00;box-shadow:0 8px 30px rgba(0,0,0,0.5),inset 0 2px 4px rgba(255,255,255,0.15);';
-    o.textContent = 'R';
-    w.appendChild(o);
-    bg.appendChild(w);
-  });
-})();
-
-// ─── SLIPPAGE CONTROLS ───────────────────────────────────────────────────────
-function toggleSlip() {
-  s.slipOpen = !s.slipOpen;
-  document.getElementById('slipPanel').style.display = s.slipOpen ? 'block' : 'none';
-}
-function setSlip(btn, val) {
-  document.querySelectorAll('.sb').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  document.getElementById('slipCustom').value = '';
-  s.slip = val;
-  s.slipVal = val === 'auto' ? 0.5 : parseFloat(val);
-  calc();
-}
-function setSlipCustom(inp) {
-  let v = parseFloat(inp.value);
-  if (v > 5.5) { v = 5.5; inp.value = 5.5; }
-  if (v < 0.1) return;
-  document.querySelectorAll('.sb').forEach(b => b.classList.remove('on'));
-  s.slip = v;
-  s.slipVal = v;
-  calc();
-}
-
-// ─── TOKEN SELECTION ─────────────────────────────────────────────────────────
-function pickFrom(t) {
-  if (t === s.to) { flip(); return; }
-  s.from = t;
-  updatePills();
-  clearAmts();
-  updateBals();
-  closeAllDd();
-}
-function pickTo(t) {
-  if (t === s.from) { flip(); return; }
-  s.to = t;
-  updatePills();
-  clearAmts();
-  updateBals();
-  closeAllDd();
-}
-function flip() {
-  [s.from, s.to] = [s.to, s.from];
-  updatePills();
-  clearAmts();
-  updateBals();
-}
-function updatePills() {
-  document.getElementById('fromIcon').className = 't-icon ' + IC[s.from];
-  document.getElementById('fromIcon').textContent = IT[s.from];
-  document.getElementById('fromSym').textContent = s.from;
-  document.getElementById('toIcon').className = 't-icon ' + IC[s.to];
-  document.getElementById('toIcon').textContent = IT[s.to];
-  document.getElementById('toSym').textContent = s.to;
-}
-
-// ─── AMOUNTS ─────────────────────────────────────────────────────────────────
-function clearAmts() {
-  document.getElementById('amtIn').value = '';
-  document.getElementById('amtOut').value = '';
-  document.getElementById('inUsd').textContent = '$0.00';
-  document.getElementById('outUsd').textContent = '$0.00';
-  document.getElementById('routeBox').style.display = 'none';
-  document.getElementById('amtIn').classList.remove('bad');
-  updateBtn();
-}
-
-function setPct(pct) {
-  if (!s.connected) { openModal(); return; }
-  let bal = s.bal[s.from] || 0;
-  if (bal <= 0) { toast('No balance'); return; }
-  let amt = bal * pct / 100;
-  // Reserve gas for POL (0.06 POL ~ safe margin for Polygon tx)
-  if (s.from === 'POL') amt = Math.max(0, amt - (0.06 * pct / 100));
-  document.getElementById('amtIn').value = parseFloat(amt.toFixed(8));
-  calc();
-}
-
-// ─── MAIN CALCULATION ────────────────────────────────────────────────────────
-function calc() {
-  const amtIn = parseFloat(document.getElementById('amtIn').value) || 0;
-  if (amtIn <= 0) { clearAmts(); return; }
-
-  // Check if we have a direct rate
-  if (getBaseRate(s.from, s.to) === null) {
-    document.getElementById('amtOut').value = '';
-    document.getElementById('routeBox').style.display = 'none';
-    updateBtn(false, true);
-    return;
-  }
-
-  const result = getOutputAmount(s.from, s.to, amtIn);
-  if (!result) return;
-
-  const { rawOut, impact } = result;
-  const minOut = rawOut * (1 - s.slipVal / 100);
-
-  // USD values
-  const inUsd  = amtIn * USD_PRICES[s.from];
-  const outUsd = rawOut * USD_PRICES[s.to];
-
-  // Rate label: show how many output tokens per 1 input
-  const rate1 = getOutputAmount(s.from, s.to, 1);
-  const rateStr = rate1 ? fmtAmt(rate1.rawOut, s.to) : '—';
-
-  // Fill in UI
-  document.getElementById('amtOut').value = fmtAmt(rawOut, s.to);
-  document.getElementById('inUsd').textContent = '$' + fmtUsd(inUsd);
-  document.getElementById('outUsd').textContent = '$' + fmtUsd(outUsd);
-  document.getElementById('rRate').textContent = '1 ' + s.from + ' = ' + rateStr + ' ' + s.to;
-  document.getElementById('rImpact').textContent = '~' + impact.toFixed(2) + '%';
-  document.getElementById('rMin').textContent = fmtAmt(minOut, s.to) + ' ' + s.to;
-  document.getElementById('rRoute').textContent = s.from + ' → ' + s.to + ' (v2)';
-  document.getElementById('impRow').className = impact > 2 ? 'rr r' : 'rr';
-  document.getElementById('routeBox').style.display = 'block';
-
-  const insuf = s.connected && amtIn > (s.bal[s.from] || 0);
-  document.getElementById('amtIn').classList.toggle('bad', insuf);
-  updateBtn(insuf);
-}
-
-// ─── NUMBER FORMATTERS ───────────────────────────────────────────────────────
-function fmtAmt(n, tok) {
-  if (tok === 'ROXs') {
-    // ROXs amounts are huge numbers, use compact notation
-    if (n >= 1e9)  return (n / 1e9).toFixed(2) + 'B';
-    if (n >= 1e6)  return (n / 1e6).toFixed(2) + 'M';
-    if (n >= 1000) return Math.round(n).toLocaleString();
-    return n.toFixed(0);
-  }
-  if (n >= 1e6) return (n / 1e6).toFixed(4) + 'M';
-  if (n >= 1)   return n.toFixed(4);
-  return n.toFixed(8);
-}
-function fmtUsd(n) {
-  return n < 0.0001 ? n.toFixed(8) : n < 1 ? n.toFixed(4) : n.toFixed(2);
-}
-function fmtBal(n, tok) {
-  if (tok === 'ROXs') return fmtAmt(n, 'ROXs');
-  return n.toFixed(4);
-}
-
-// ─── BUTTON STATE ────────────────────────────────────────────────────────────
-function updateBtn(insuf = false, noPair = false) {
-  const btn = document.getElementById('mainBtn');
-  const amtIn = parseFloat(document.getElementById('amtIn').value) || 0;
-  if (!s.connected) {
-    btn.textContent = 'Connect Wallet';
-    btn.className = 'btn-main btn-orange';
-    btn.onclick = openModal;
-  } else if (noPair) {
-    btn.textContent = 'Pair not available';
-    btn.className = 'btn-main btn-off';
-    btn.onclick = null;
-  } else if (amtIn <= 0) {
-    btn.textContent = 'Enter an amount';
-    btn.className = 'btn-main btn-off';
-    btn.onclick = null;
-  } else if (insuf) {
-    btn.textContent = 'Insufficient ' + s.from + ' balance';
-    btn.className = 'btn-main btn-warn';
-    btn.onclick = null;
-  } else {
-    btn.textContent = 'Swap on Uniswap';
-    btn.className = 'btn-main btn-orange';
-    btn.onclick = doSwap;
-  }
-}
-
-// ─── BALANCE DISPLAY ─────────────────────────────────────────────────────────
-function updateBals() {
-  document.getElementById('balIn').textContent = s.connected ? fmtBal(s.bal[s.from], s.from) : '0.00';
-  document.getElementById('balOut').textContent = s.connected ? fmtBal(s.bal[s.to], s.to) : '0.00';
-}
-
-// ─── WALLET MODAL ────────────────────────────────────────────────────────────
-function openModal()  { document.getElementById('walletModal').classList.add('open'); }
-function closeModal() { document.getElementById('walletModal').classList.remove('open'); }
-
-async function connectWallet(type) {
-  closeModal();
-  if (type === 'MetaMask' && window.ethereum) {
-    try {
-      const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      if (accs.length) {
-        s.addr = accs[0];
-        await switchPoly();
-        await loadBals(s.addr);
-        onConn(s.addr);
-        return;
-      }
-    } catch (e) { toast('Rejected by user'); return; }
-  }
-  // For non-MetaMask wallets: open Uniswap directly
-  if (type !== 'MetaMask') {
-    const url = buildUniswapUrl();
-    window.open(url, '_blank');
-    toast('Opening ' + type + ' via Uniswap...');
-    return;
-  }
-  toast('Please install MetaMask first');
-}
-
-async function switchPoly() {
-  if (!window.ethereum) return;
-  try {
-    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: POLY_CHAIN }] });
-  } catch (e) {
-    if (e.code === 4902) {
-      await window.ethereum.request({
-        method: 'wallet_addEthereumChain',
-        params: [{
-          chainId: POLY_CHAIN,
-          chainName: 'Polygon Mainnet',
-          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-          rpcUrls: ['https://polygon-rpc.com/'],
-          blockExplorerUrls: ['https://polygonscan.com/']
-        }]
-      });
-    }
-  }
-}
-
-async function loadBals(addr) {
-  try {
-    // POL balance
-    const polHex = await window.ethereum.request({ method: 'eth_getBalance', params: [addr, 'latest'] });
-    s.bal.POL = parseInt(polHex, 16) / 1e18;
-
-    // ERC20 balanceOf call data
-    const data = '0x70a08231' + addr.replace('0x', '').padStart(64, '0');
-
-    // ROXs balance (18 decimals)
-    const roxHex = await window.ethereum.request({ method: 'eth_call', params: [{ to: ROXS_ADDR, data }, 'latest'] });
-    s.bal.ROXs = parseInt(roxHex, 16) / 1e18;
-
-    // USDT balance (6 decimals)
-    const usdtHex = await window.ethereum.request({ method: 'eth_call', params: [{ to: USDT_ADDR, data }, 'latest'] });
-    s.bal.USDT = parseInt(usdtHex, 16) / 1e6;
-
-    updateBals();
-  } catch (e) { console.warn('Balance load error:', e); }
-}
-
-function onConn(addr) {
-  s.connected = true;
-  const sh = addr.slice(0, 6) + '...' + addr.slice(-4);
-  document.getElementById('wAddr').textContent = sh;
-  document.getElementById('wPill').style.display = 'flex';
-  document.getElementById('btnConn').style.display = 'none';
-  document.getElementById('maxBtn').style.display = 'inline-block';
-  if (window.ethereum) document.getElementById('mmBadge').textContent = 'INSTALLED';
-  updateBals();
-  updateBtn();
-  toast('✓ Wallet connected!');
-}
-
-function disconnect() {
-  s.connected = false;
-  s.addr = '';
-  s.bal = { POL: 0, USDT: 0, ROXs: 0 };
-  document.getElementById('wPill').style.display = 'none';
-  document.getElementById('btnConn').style.display = 'block';
-  document.getElementById('maxBtn').style.display = 'none';
-  updateBals();
-  updateBtn();
-  toast('Disconnected');
-}
-
-// ─── SWAP ACTION ─────────────────────────────────────────────────────────────
-function buildUniswapUrl() {
-  const amt = document.getElementById('amtIn').value || '';
-  const inA  = s.from === 'POL'  ? 'MATIC' : s.from === 'USDT' ? USDT_ADDR : ROXS_ADDR;
-  const outA = s.to   === 'POL'  ? 'MATIC' : s.to   === 'USDT' ? USDT_ADDR : ROXS_ADDR;
-  let url = 'https://app.uniswap.org/swap?inputCurrency=' + inA + '&outputCurrency=' + outA + '&chain=polygon&use=V2';
-  if (amt) url += '&exactAmount=' + amt + '&exactField=input';
-  return url;
-}
-
-async function doSwap() {
-  const amt = document.getElementById('amtIn').value;
-  if (!amt) return;
-  window.open(buildUniswapUrl(), '_blank');
-  toast('Opening Uniswap to confirm swap...');
-}
-
-// ─── DROPDOWNS ───────────────────────────────────────────────────────────────
-function toggleDd(id) {
-  const el = document.getElementById(id);
-  const was = el.classList.contains('open');
-  closeAllDd();
-  if (!was) el.classList.add('open');
-}
-function closeAllDd() {
-  document.querySelectorAll('.t-dd').forEach(d => d.classList.remove('open'));
-}
-document.addEventListener('click', closeAllDd);
-document.getElementById('walletModal').addEventListener('click', function (e) {
-  if (e.target === this) closeModal();
-});
-
-// ─── TOAST ───────────────────────────────────────────────────────────────────
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ─── AUTO-CONNECT ON LOAD ────────────────────────────────────────────────────
-window.addEventListener('load', async () => {
-  if (window.ethereum) {
-    document.getElementById('mmBadge').textContent = 'INSTALLED';
-    if (window.ethereum.selectedAddress) {
-      s.addr = window.ethereum.selectedAddress;
-      await switchPoly();
-      await loadBals(s.addr);
-      onConn(s.addr);
-    }
-    window.ethereum.on('accountsChanged', async a => {
-      if (a.length) { s.addr = a[0]; await loadBals(s.addr); onConn(s.addr); }
-      else disconnect();
-    });
-    window.ethereum.on('chainChanged', () => location.reload());
-  }
-});
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-
-<script>
-// ─────────────────────────────────────────────
-// CONFIG REAL
-// ─────────────────────────────────────────────
-
-const ROXS_ADDR = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
-const USDT_ADDR = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
-const WPOL      = "0x0000000000000000000000000000000000001010"; // POL
-const ROUTER    = "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"; // Uniswap v2 Polygon
-
-// ABI MINIMA
-const ERC20_ABI = [
-  "function approve(address spender,uint amount) external returns(bool)",
-  "function allowance(address owner,address spender) view returns(uint)",
-  "function balanceOf(address owner) view returns(uint)",
-  "function decimals() view returns(uint)"
-];
-
-const ROUTER_ABI = [
-  "function getAmountsOut(uint amountIn,address[] calldata path) view returns(uint[] memory amounts)",
-  "function swapExactETHForTokens(uint amountOutMin,address[] calldata path,address to,uint deadline) payable returns(uint[] memory)",
-  "function swapExactTokensForETH(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) returns(uint[] memory)",
-  "function swapExactTokensForTokens(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) returns(uint[] memory)"
-];
-
-// ─────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────
-
-let provider, signer, user;
-
-// ─────────────────────────────────────────────
-// CONNECT
-// ─────────────────────────────────────────────
-
+// ─── INIT ─────────────────────────────────────────
 async function connectWallet() {
   if (!window.ethereum) return alert("Install MetaMask");
 
   provider = new ethers.providers.Web3Provider(window.ethereum);
   await provider.send("eth_requestAccounts", []);
   signer = provider.getSigner();
-  user = await signer.getAddress();
+  account = await signer.getAddress();
 
-  onConn(user);
-  loadBalances();
+  router = new ethers.Contract(
+    ROUTER,
+    [
+      "function getAmountsOut(uint amountIn, address[] memory path) view returns (uint[] memory amounts)",
+      "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) payable returns (uint[] memory amounts)",
+      "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)"
+    ],
+    signer
+  );
+
+  toast("Wallet conectada");
 }
 
-// ─────────────────────────────────────────────
-// BALANCES
-// ─────────────────────────────────────────────
-
-async function loadBalances() {
-  const pol = await provider.getBalance(user);
-  s.bal.POL = parseFloat(ethers.utils.formatEther(pol));
-
-  const rox = new ethers.Contract(ROXS_ADDR, ERC20_ABI, provider);
-  const usdt = new ethers.Contract(USDT_ADDR, ERC20_ABI, provider);
-
-  s.bal.ROXs = parseFloat(ethers.utils.formatUnits(await rox.balanceOf(user),18));
-  s.bal.USDT = parseFloat(ethers.utils.formatUnits(await usdt.balanceOf(user),6));
-
-  updateBals();
-}
-
-// ─────────────────────────────────────────────
-// PATH LOGIC (RUTAS)
-// ─────────────────────────────────────────────
-
+// ─── PATH LOGIC ────────────────────────────────────
 function getPath(from, to) {
-
   const map = {
-    POL: WPOL,
-    ROXs: ROXS_ADDR,
-    USDT: USDT_ADDR
+    POL: WMATIC,
+    USDT: USDT,
+    ROXs: ROXS
   };
 
-  // Directo
+  const A = map[from];
+  const B = map[to];
+
+  if (A === B) return null;
+
+  // Direct pairs
   if (
-    (from === "POL" && to === "ROXs") ||
-    (from === "ROXs" && to === "POL") ||
-    (from === "USDT" && to === "ROXs") ||
-    (from === "ROXs" && to === "USDT")
+    (A === WMATIC && B === ROXS) ||
+    (A === ROXS && B === WMATIC) ||
+    (A === USDT && B === ROXS) ||
+    (A === ROXS && B === USDT)
   ) {
-    return [map[from], map[to]];
+    return [A, B];
   }
 
-  // Ruta intermedia
-  return [map[from], USDT_ADDR, map[to]];
+  // Route via USDT
+  return [A, USDT, B];
 }
 
-// ─────────────────────────────────────────────
-// PRECIO REAL ON-CHAIN
-// ─────────────────────────────────────────────
-
-async function calc() {
-  const amt = document.getElementById("amtIn").value;
-  if (!amt || !provider) return;
-
-  const router = new ethers.Contract(ROUTER, ROUTER_ABI, provider);
-
-  const decimals = s.from === "USDT" ? 6 : 18;
-  const amountIn = ethers.utils.parseUnits(amt, decimals);
-
-  const path = getPath(s.from, s.to);
-
-  try {
-    const amounts = await router.getAmountsOut(amountIn, path);
-
-    const outDecimals = s.to === "USDT" ? 6 : 18;
-    const out = ethers.utils.formatUnits(amounts[amounts.length - 1], outDecimals);
-
-    document.getElementById("amtOut").value = out;
-
-  } catch(e){
-    document.getElementById("amtOut").value = "0";
-  }
+// ─── PRICE REAL ────────────────────────────────────
+async function getAmountOut(amountIn, path) {
+  const amounts = await router.getAmountsOut(amountIn, path);
+  return amounts[amounts.length - 1];
 }
 
-// ─────────────────────────────────────────────
-// APPROVE
-// ─────────────────────────────────────────────
+// ─── APPROVE ───────────────────────────────────────
+async function approve(token, amount) {
+  const erc20 = new ethers.Contract(
+    token,
+    [
+      "function approve(address spender, uint amount) public returns (bool)"
+    ],
+    signer
+  );
 
-async function approveIfNeeded(tokenAddr, amount) {
-  const token = new ethers.Contract(tokenAddr, ERC20_ABI, signer);
-
-  const allowance = await token.allowance(user, ROUTER);
-
-  if (allowance.lt(amount)) {
-    const tx = await token.approve(ROUTER, ethers.constants.MaxUint256);
-    toast("Approving...");
-    await tx.wait();
-  }
+  const tx = await erc20.approve(ROUTER, amount);
+  await tx.wait();
 }
 
-// ─────────────────────────────────────────────
-// SWAP REAL
-// ─────────────────────────────────────────────
-
-async function doSwap() {
+// ─── SWAP REAL ─────────────────────────────────────
+async function doSwapReal() {
+  if (!signer) return alert("Connect wallet");
 
   const amt = document.getElementById("amtIn").value;
-  if (!amt) return;
+  if (!amt || amt <= 0) return;
 
-  const router = new ethers.Contract(ROUTER, ROUTER_ABI, signer);
-  const path = getPath(s.from, s.to);
+  const from = s.from;
+  const to   = s.to;
 
-  const deadline = Math.floor(Date.now()/1000) + 60*10;
+  const path = getPath(from, to);
+  if (!path) return alert("Invalid pair");
 
-  let tx;
+  const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
 
   try {
-
-    // POL → TOKEN
-    if (s.from === "POL") {
-
+    if (from === "POL") {
+      // POL → TOKEN
       const value = ethers.utils.parseEther(amt);
 
-      tx = await router.swapExactETHForTokens(
-        0,
+      const out = await getAmountOut(value, path);
+      const min = out.mul(95).div(100); // 5% slippage
+
+      const tx = await router.swapExactETHForTokens(
+        min,
         path,
-        user,
+        account,
         deadline,
         { value }
       );
 
-    }
+      toast("Swapping...");
+      await tx.wait();
+      toast("Swap DONE 🚀");
 
-    // TOKEN → POL
-    else if (s.to === "POL") {
-
-      const decimals = s.from === "USDT" ? 6 : 18;
+    } else {
+      // TOKEN → TOKEN
+      const decimals = from === "USDT" ? 6 : 18;
       const amountIn = ethers.utils.parseUnits(amt, decimals);
 
-      await approveIfNeeded(path[0], amountIn);
+      await approve(path[0], amountIn);
 
-      tx = await router.swapExactTokensForETH(
+      const out = await getAmountOut(amountIn, path);
+      const min = out.mul(95).div(100);
+
+      const tx = await router.swapExactTokensForTokens(
         amountIn,
-        0,
+        min,
         path,
-        user,
+        account,
         deadline
       );
 
+      toast("Swapping...");
+      await tx.wait();
+      toast("Swap DONE 🚀");
     }
 
-    // TOKEN → TOKEN
-    else {
-
-      const decimals = s.from === "USDT" ? 6 : 18;
-      const amountIn = ethers.utils.parseUnits(amt, decimals);
-
-      await approveIfNeeded(path[0], amountIn);
-
-      tx = await router.swapExactTokensForTokens(
-        amountIn,
-        0,
-        path,
-        user,
-        deadline
-      );
-    }
-
-    toast("Swapping...");
-    await tx.wait();
-    toast("DONE 🚀");
-
-    loadBalances();
-
-  } catch(e) {
+  } catch (e) {
     console.error(e);
-    toast("Error swap");
+    toast("Error en swap");
   }
 }
 
-// ─────────────────────────────────────────────
-// AUTO CONNECT
-// ─────────────────────────────────────────────
-
-window.addEventListener("load", async () => {
-  if (window.ethereum && window.ethereum.selectedAddress) {
+// ─── HOOK BOTÓN ────────────────────────────────────
+document.getElementById("mainBtn").onclick = async () => {
+  if (!account) {
     await connectWallet();
+  } else {
+    await doSwapReal();
   }
-});
+};
 
+// ─── SIMPLE TOAST ─────────────────────────────────
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
 </script>
-
-
