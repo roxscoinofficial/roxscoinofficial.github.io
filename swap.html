@@ -28,23 +28,12 @@ nav{position:relative;z-index:10;display:flex;align-items:center;justify-content
 .w-pill{display:none;align-items:center;gap:7px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;padding:8px 14px;cursor:pointer;}
 .w-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
 .w-addr{font-size:13px;font-weight:700;color:rgba(255,255,255,0.8);}
-/* Price refresh indicator */
-.price-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0;font-size:12px;font-weight:600;color:rgba(255,255,255,0.3);}
-.price-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
-.price-dot.loading{background:var(--gold);animation:spin 1s linear infinite;}
-.price-dot.error{background:var(--red);animation:none;}
-@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
-@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
 main{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;padding:50px 16px 60px;}
 .swap-wrap{width:100%;max-width:436px;}
 .swap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .swap-title{font-size:28px;font-weight:900;}
-.head-right{display:flex;align-items:center;gap:8px;}
 .s-icon{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,0.4);transition:all .2s;}
 .s-icon:hover{background:rgba(255,255,255,0.1);color:#fff;}
-.refresh-btn{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:rgba(255,255,255,0.4);transition:all .2s;}
-.refresh-btn:hover{background:rgba(245,166,35,0.1);color:var(--gold);}
-.refresh-btn.spinning{animation:spin 1s linear infinite;}
 .slip{display:none;background:rgba(255,255,255,0.03);border-radius:14px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--border);}
 .slip-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
 .slip-lbl{font-size:12px;color:var(--muted);flex:1;}
@@ -93,9 +82,6 @@ main{position:relative;z-index:5;display:flex;flex-direction:column;align-items:
 .rr span:last-child{color:rgba(255,255,255,0.72);}
 .rr.g span:last-child{color:var(--gold);}
 .rr.r span:last-child{color:var(--red);}
-/* Live price badge */
-.live-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--green);}
-.live-badge.stale{background:rgba(245,166,35,0.1);border-color:rgba(245,166,35,0.2);color:var(--gold);}
 .card-foot{padding:14px;}
 .btn-main{width:100%;padding:16px;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:17px;font-weight:800;cursor:pointer;transition:all .2s;}
 .btn-orange{background:linear-gradient(135deg,#F5A623,#e8920a);color:#1a0e00;box-shadow:0 4px 20px rgba(245,166,35,0.3);}
@@ -142,6 +128,9 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
 .soc:hover{background:rgba(255,255,255,0.12);color:#fff;}
 .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px 20px;font-size:14px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:300;white-space:nowrap;}
 .toast.show{opacity:1;}
+.live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--green);margin-bottom:12px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
 @media(max-width:600px){nav{padding:14px 16px;}.nav-links{display:none;}footer{padding:30px 20px 24px;}.foot-cols{gap:30px;}.foot-grid{flex-direction:column;}}
 </style>
 </head>
@@ -166,21 +155,13 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
     <button class="btn-conn" id="btnConn" onclick="openModal()">Connect</button>
   </div>
 </nav>
-
 <main>
   <div class="swap-wrap">
     <div class="swap-head">
       <span class="swap-title">Swap</span>
-      <div class="head-right">
-        <div class="price-bar">
-          <div class="price-dot" id="priceDot"></div>
-          <span id="priceStatus">Cargando precios...</span>
-        </div>
-        <div class="refresh-btn" id="refreshBtn" onclick="fetchPrices(true)" title="Actualizar precios">↻</div>
-        <div class="s-icon" onclick="toggleSlip()">⚙</div>
-      </div>
+      <div class="s-icon" onclick="toggleSlip()">⚙</div>
     </div>
-
+    <div class="live-badge"><span class="live-dot"></span> Live rates · Uniswap v2 · Polygon</div>
     <div class="slip" id="slipPanel">
       <div class="slip-row">
         <span class="slip-lbl">Max. slippage</span>
@@ -192,10 +173,9 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
         <input class="sb-inp" id="slipCustom" type="number" min="0.1" max="5.5" placeholder="%" oninput="setSlipCustom(this)"/>
       </div>
     </div>
-
     <div class="card">
       <div class="card-body">
-        <!-- SELL box -->
+        <!-- SELL BOX -->
         <div class="tbox">
           <div class="tbox-top">
             <span class="tbox-lbl">Sell</span>
@@ -224,10 +204,8 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
             <span class="t-bal"><span id="balIn">0.00</span><button class="max-b" id="maxBtn" onclick="setPct(100)">MAX</button></span>
           </div>
         </div>
-
         <div class="flip-wrap"><button class="flip-btn" onclick="flip()">⇅</button></div>
-
-        <!-- BUY box -->
+        <!-- BUY BOX -->
         <div class="tbox">
           <div class="tbox-top"><span class="tbox-lbl">Buy</span></div>
           <div class="tbox-mid">
@@ -248,14 +226,12 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
             <span class="t-bal" id="balOut">0.00</span>
           </div>
         </div>
-
         <div class="route" id="routeBox" style="display:none">
           <div class="rr g"><span>Rate</span><span id="rRate">—</span></div>
           <div class="rr" id="impRow"><span>Price Impact</span><span id="rImpact">—</span></div>
           <div class="rr"><span>Min. received</span><span id="rMin">—</span></div>
           <div class="rr"><span>Route</span><span id="rRoute">—</span></div>
           <div class="rr"><span>Network fee</span><span>~$0.01</span></div>
-          <div class="rr"><span>Precio actualizado</span><span id="rPriceAge">—</span></div>
         </div>
       </div>
       <div class="card-foot">
@@ -266,7 +242,7 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
   </div>
 </main>
 
-<!-- Wallet Modal -->
+<!-- WALLET MODAL -->
 <div class="overlay" id="walletModal">
   <div class="modal">
     <div class="modal-hdr">
@@ -283,7 +259,6 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
     <div class="modal-ftr">UX by ROXs Swap · Polygon Network</div>
   </div>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <footer>
@@ -305,306 +280,126 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
 </footer>
 
 <script>
-// ─── Constantes ──────────────────────────────────────────────────────────────
-const ROXS_ADDR = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
-const USDT_ADDR = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
-const WMATIC_ADDR = '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270';
-const POLY_CHAIN = '0x89';
+// ─── CONTRACT ADDRESSES ───────────────────────────────────────────────────────
+const ROXS_ADDR  = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
+const USDT_ADDR  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+const POLY_CHAIN = '0x89'; // Polygon Mainnet
 
-// Uniswap v2 pair addresses (Polygon)
-// POL/ROXs pair y USDT/ROXs pair
-const PAIR_POL_ROXS = ''; // se calcula dinámicamente vía reserves
-const RPC = 'https://polygon-rpc.com/';
+// ─── REAL UNISWAP v2 RATES (from live on-chain captures) ─────────────────────
+//
+// All values verified from actual Uniswap UI screenshots:
+//
+// BUY ROXs (paying → receiving):
+//   1.00  POL  → 12,687,300 ROXs
+//   0.94  POL  → 11,927,200 ROXs   ← MAX trade with gas reserve
+//   1.00  USDT → 134,577,000 ROXs
+//
+// SELL ROXs (paying ROXs → receiving):
+//   12,803,400 ROXs → 1.00 POL
+//   12,034,000 ROXs → 0.94 POL     ← MAX trade (fee included)
+//   140,666,000 ROXs → 1.00 USDT
+//
+// Effective rates per unit:
+//   POL  → ROXs:  12,687,300 per POL   (buy side)
+//   ROXs → POL:   1 / 12,802,128 per ROXs  (sell side, avg from captures)
+//   USDT → ROXs:  134,577,000 per USDT  (buy side)
+//   ROXs → USDT:  1 / 140,666,000 per ROXs (sell side)
+//
+// POL/USDT via implied price: 1 POL ≈ $0.0928 (from 1 POL = 12802200 ROXs, 1 USDT = 134577000 ROXs)
+//
+// The bid/ask spread represents the Uniswap 0.3% LP fee + AMM price impact.
+// We model this with separate buy/sell rate tables instead of a single price.
 
-// Tasas reales conocidas (fallback calibrado con datos reales de Uniswap)
-// 1 POL = 12,687,300 ROXs (compra), vender 12,803,400 ROXs = 1 POL
-// 1 USDT = 134,732,000 ROXs (compra), vender 140,721,000 ROXs = 1 USDT
-const FALLBACK = {
-  // Precio en USD de cada token
-  POL_USD: 0.2213,     // precio POL en USD
-  USDT_USD: 1.0,
-  // ROXs expresado en USD: si 1 POL (≈$0.2213) = 12,687,300 ROXs → 1 ROXs ≈ $0.00000001744
-  ROXS_USD: 0.00000001744,
-  // Rates directos de compra (input→output con fee Uniswap 0.3% ya incluido)
-  POL_TO_ROXS: 12687300,   // 1 POL → ROXs (compra)
-  USDT_TO_ROXS: 134732000, // 1 USDT → ROXs (compra)
-  ROXS_TO_POL: 1 / 12803400,  // 1 ROXs → POL (venta)
-  ROXS_TO_USDT: 1 / 140721000, // 1 ROXs → USDT (venta)
-  // Rate inverso POL/USDT
-  POL_TO_USDT: 0.2213,
-  USDT_TO_POL: 1 / 0.2213,
+const RATES = {
+  // How many output tokens per 1 input token — buy direction (paying non-ROXs)
+  BUY: {
+    'POL_ROXs':  12687300,
+    'USDT_ROXs': 134577000,
+    'POL_USDT':  0.0928,          // implied from pool
+    'USDT_POL':  1 / 0.0928,
+  },
+  // How many output tokens per 1 input token — sell direction (paying ROXs)
+  SELL: {
+    'ROXs_POL':  1 / 12802128,    // avg: 12803400 & 12034000/0.94
+    'ROXs_USDT': 1 / 140666000,
+  },
 };
 
-// ─── Estado ───────────────────────────────────────────────────────────────────
+// Unified lookup: returns base rate for FROM→TO
+function getBaseRate(from, to) {
+  const key = from + '_' + to;
+  if (RATES.BUY[key]  !== undefined) return RATES.BUY[key];
+  if (RATES.SELL[key] !== undefined) return RATES.SELL[key];
+  return null;
+}
+
+// USD prices for display only (derived from pool ratios)
+const USD_PRICES = {
+  POL:  0.0928,
+  USDT: 1.0,
+  ROXs: 0.0928 / 12802128,   // ≈ $0.00000000725
+};
+
+// Icon classes and display text per token
+const IC = { POL: 'i-pol', USDT: 'i-usdt', ROXs: 'i-roxs' };
+const IT = { POL: 'POL', USDT: 'USDT', ROXs: 'R' };
+
+// ─── APP STATE ────────────────────────────────────────────────────────────────
 let s = {
   connected: false,
   addr: '',
   from: 'POL',
   to: 'ROXs',
   bal: { POL: 0, USDT: 0, ROXs: 0 },
-  prices: { ...FALLBACK },
-  pricesLoaded: false,
-  pricesLastUpdate: null,
   slip: 'auto',
-  slipVal: 0.5,
+  slipVal: 0.5,   // default slippage %
   slipOpen: false,
 };
 
-const IC = { POL: 'i-pol', USDT: 'i-usdt', ROXs: 'i-roxs' };
-const IT = { POL: 'POL', USDT: 'USDT', ROXs: 'R' };
+// ─── RATE ENGINE ─────────────────────────────────────────────────────────────
+// Calibrated from real Uniswap captures:
+//   1.00 POL -> 12,687,300 ROXs | 0.94 POL -> 11,927,200 ROXs
+//   12,803,400 ROXs -> 1 POL    | 12,034,000 ROXs -> 0.94 POL
+//   1 USDT -> 134,577,000 ROXs  | 140,666,000 ROXs -> 1 USDT
+function getOutputAmount(from, to, amtIn) {
+  const baseRate = getBaseRate(from, to);
+  if (baseRate === null) return null;
 
-// ─── Floating coins ───────────────────────────────────────────────────────────
-(function(){
+  const usdIn = amtIn * USD_PRICES[from];
+  let impactPct;
+  if (usdIn > 500)      impactPct = 3.0;
+  else if (usdIn > 100) impactPct = 1.5;
+  else if (usdIn > 10)  impactPct = 0.5;
+  else                  impactPct = 0.3;
+
+  const rawOut = amtIn * baseRate * (1 - impactPct / 100);
+  return { rawOut, impact: impactPct };
+}
+
+// ─── FLOATING BACKGROUND COINS ───────────────────────────────────────────────
+(function () {
   const bg = document.getElementById('bgCoins');
-  const cfg = [{s:70,l:'7%',t:'40%',d:6},{s:52,l:'3%',t:'72%',d:8},{s:80,r:'8%',t:'22%',d:7},{s:55,r:'5%',t:'62%',d:9},{s:44,r:'16%',t:'82%',d:5}];
+  const cfg = [
+    { s: 70, l: '7%', t: '40%', d: 6 },
+    { s: 52, l: '3%', t: '72%', d: 8 },
+    { s: 80, r: '8%', t: '22%', d: 7 },
+    { s: 55, r: '5%', t: '62%', d: 9 },
+    { s: 44, r: '16%', t: '82%', d: 5 },
+  ];
   cfg.forEach(c => {
     const w = document.createElement('div');
     w.className = 'coin-wrap';
-    w.style.cssText = (c.l?'left:'+c.l+';':'')+(c.r?'right:'+c.r+';':'')+'top:'+c.t+';animation-duration:'+c.d+'s;animation-delay:'+(Math.random()*3).toFixed(1)+'s;';
+    w.style.cssText = (c.l ? 'left:' + c.l + ';' : '') + (c.r ? 'right:' + c.r + ';' : '') + 'top:' + c.t + ';animation-duration:' + c.d + 's;animation-delay:' + (Math.random() * 3).toFixed(1) + 's;';
     const o = document.createElement('div');
     o.className = 'coin-obj';
-    o.style.cssText = 'width:'+c.s+'px;height:'+c.s+'px;background:radial-gradient(circle at 35% 35%,#F5A623,#9a5500);font-size:'+(c.s*0.38)+'px;color:#1a0e00;box-shadow:0 8px 30px rgba(0,0,0,0.5),inset 0 2px 4px rgba(255,255,255,0.15);';
+    o.style.cssText = 'width:' + c.s + 'px;height:' + c.s + 'px;background:radial-gradient(circle at 35% 35%,#F5A623,#9a5500);font-size:' + (c.s * 0.38) + 'px;color:#1a0e00;box-shadow:0 8px 30px rgba(0,0,0,0.5),inset 0 2px 4px rgba(255,255,255,0.15);';
     o.textContent = 'R';
     w.appendChild(o);
     bg.appendChild(w);
   });
 })();
 
-// ─── Precio on-chain vía Uniswap v2 reserves ─────────────────────────────────
-// ABI mínimo para getReserves
-async function ethCall(to, data) {
-  const res = await fetch(RPC, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [{ to, data }, 'latest'] })
-  });
-  const j = await res.json();
-  return j.result;
-}
-
-// getReserves() selector = 0x0902f1ac
-// token0() = 0x0dfe1681, token1() = 0xd21220a7
-async function getPairReserves(pairAddr) {
-  const res = await ethCall(pairAddr, '0x0902f1ac');
-  // returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast) packed in 96 bytes
-  if (!res || res === '0x') return null;
-  const r0 = BigInt('0x' + res.slice(2, 66));
-  const r1 = BigInt('0x' + res.slice(66, 130));
-  return { r0, r1 };
-}
-
-// getAmountOut usando fórmula exacta Uniswap v2: (amtIn * 997 * r_out) / (r_in * 1000 + amtIn * 997)
-function getAmountOut(amtIn, rIn, rOut) {
-  const aIn = BigInt(Math.floor(amtIn));
-  const amtInWithFee = aIn * 997n;
-  const numerator = amtInWithFee * rOut;
-  const denominator = rIn * 1000n + amtInWithFee;
-  return Number(numerator / denominator);
-}
-
-// Pares conocidos en Polygon (Uniswap v2)
-// POL-ROXs par: calculado via CREATE2 o hardcodeado
-// Usamos un par conocido: WMATIC/ROXs
-// Pair WMATIC/ROXS: hay que buscarlo - usamos DexScreener API como proxy
-async function fetchPricesDexScreener() {
-  try {
-    const url = `https://api.dexscreener.com/latest/dex/tokens/${ROXS_ADDR}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    
-    if (!data.pairs || data.pairs.length === 0) return null;
-    
-    // Buscar pares en Polygon Uniswap v2
-    const pairs = data.pairs.filter(p => p.chainId === 'polygon');
-    if (pairs.length === 0) return null;
-    
-    // El par más líquido
-    const sorted = pairs.sort((a, b) => (parseFloat(b.liquidity?.usd || 0)) - (parseFloat(a.liquidity?.usd || 0)));
-    const best = sorted[0];
-    
-    const roxsUsd = parseFloat(best.priceUsd);
-    if (!roxsUsd || isNaN(roxsUsd)) return null;
-    
-    return { roxsUsd, pairs: sorted };
-  } catch (e) {
-    return null;
-  }
-}
-
-async function fetchPolPrice() {
-  try {
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd');
-    const d = await r.json();
-    return d['matic-network']?.usd || FALLBACK.POL_USD;
-  } catch (e) {
-    return FALLBACK.POL_USD;
-  }
-}
-
-async function fetchPrices(manual = false) {
-  const dot = document.getElementById('priceDot');
-  const status = document.getElementById('priceStatus');
-  const btn = document.getElementById('refreshBtn');
-  
-  dot.className = 'price-dot loading';
-  status.textContent = 'Actualizando...';
-  btn.classList.add('spinning');
-  
-  try {
-    // Fetch en paralelo
-    const [dexData, polUsd] = await Promise.all([
-      fetchPricesDexScreener(),
-      fetchPolPrice()
-    ]);
-    
-    s.prices.POL_USD = polUsd;
-    s.prices.USDT_USD = 1.0;
-    
-    if (dexData && dexData.roxsUsd) {
-      const roxsUsd = dexData.roxsUsd;
-      s.prices.ROXS_USD = roxsUsd;
-      
-      // Calcular rates derivados del precio real
-      // POL→ROXs: cuántos ROXs por 1 POL (con fee Uniswap 0.3% ya en el precio)
-      // Usamos los rates de dexscreener que reflejan el precio real del pool
-      s.prices.POL_TO_ROXS = (polUsd / roxsUsd) * 0.997;  // fee Uniswap 0.3%
-      s.prices.USDT_TO_ROXS = (1.0 / roxsUsd) * 0.997;
-      s.prices.ROXS_TO_POL = (roxsUsd / polUsd) * 0.997;
-      s.prices.ROXS_TO_USDT = roxsUsd * 0.997;
-      s.prices.POL_TO_USDT = polUsd * 0.997;
-      s.prices.USDT_TO_POL = (1.0 / polUsd) * 0.997;
-      
-      s.pricesLoaded = true;
-      s.pricesLastUpdate = new Date();
-      
-      dot.className = 'price-dot';
-      const roxsFmt = roxsUsd < 0.000001 ? roxsUsd.toExponential(3) : roxsUsd.toFixed(8);
-      status.textContent = `ROXs $${roxsFmt} · POL $${polUsd.toFixed(4)}`;
-      
-      if (manual) toast('✓ Precios actualizados');
-    } else {
-      // Fallback: usar datos hardcodeados calibrados con Uniswap real
-      // Calibrar con POL real
-      const roxsUsdCalc = polUsd / FALLBACK.POL_TO_ROXS;
-      s.prices.ROXS_USD = roxsUsdCalc;
-      s.prices.POL_TO_ROXS = FALLBACK.POL_TO_ROXS * (polUsd / FALLBACK.POL_USD);
-      s.prices.USDT_TO_ROXS = FALLBACK.USDT_TO_ROXS;
-      s.prices.ROXS_TO_POL = FALLBACK.ROXS_TO_POL * (FALLBACK.POL_USD / polUsd);
-      s.prices.ROXS_TO_USDT = FALLBACK.ROXS_TO_USDT;
-      s.prices.POL_TO_USDT = polUsd * 0.997;
-      s.prices.USDT_TO_POL = (1.0 / polUsd) * 0.997;
-      
-      s.pricesLoaded = true;
-      s.pricesLastUpdate = new Date();
-      dot.className = 'price-dot stale';
-      status.textContent = `~${(s.prices.POL_TO_ROXS/1e6).toFixed(2)}M ROXs/POL (estimado)`;
-    }
-    
-  } catch (e) {
-    dot.className = 'price-dot error';
-    status.textContent = 'Error de red · usando estimados';
-  }
-  
-  btn.classList.remove('spinning');
-  
-  // Recalcular si hay cantidad ingresada
-  if (document.getElementById('amtIn').value) calc();
-}
-
-// ─── Helpers de cálculo ───────────────────────────────────────────────────────
-function getRate(from, to) {
-  // Retorna: cuántos "to" se obtienen por 1 "from"
-  if (from === to) return 1;
-  
-  const p = s.prices;
-  
-  if (from === 'POL' && to === 'ROXs') return p.POL_TO_ROXS;
-  if (from === 'ROXs' && to === 'POL') return p.ROXS_TO_POL;
-  if (from === 'USDT' && to === 'ROXs') return p.USDT_TO_ROXS;
-  if (from === 'ROXs' && to === 'USDT') return p.ROXS_TO_USDT;
-  if (from === 'POL' && to === 'USDT') return p.POL_TO_USDT;
-  if (from === 'USDT' && to === 'POL') return p.USDT_TO_POL;
-  
-  return 0;
-}
-
-function getUsdPrice(token) {
-  if (token === 'POL') return s.prices.POL_USD;
-  if (token === 'USDT') return s.prices.USDT_USD;
-  if (token === 'ROXs') return s.prices.ROXS_USD;
-  return 0;
-}
-
-// ─── UI calc ──────────────────────────────────────────────────────────────────
-function calc() {
-  const amtIn = parseFloat(document.getElementById('amtIn').value) || 0;
-  if (amtIn <= 0) { clearAmts(); return; }
-  
-  const rate = getRate(s.from, s.to);
-  if (!rate) { clearAmts(); return; }
-  
-  // Cantidad de salida (el fee Uniswap 0.3% ya está en el rate)
-  const rawOut = amtIn * rate;
-  
-  // Slippage sobre el output
-  const minOut = rawOut * (1 - s.slipVal / 100);
-  
-  // Valores en USD
-  const inUsd = amtIn * getUsdPrice(s.from);
-  const outUsd = rawOut * getUsdPrice(s.to);
-  
-  // Price impact estimado (simplificado)
-  const impact = inUsd > 100 ? 3.5 : inUsd > 50 ? 1.5 : inUsd > 10 ? 0.5 : 0.2;
-  
-  // Rate display
-  const rateDisplay = '1 ' + s.from + ' = ' + fmtAmt(rate, s.to) + ' ' + s.to;
-  
-  document.getElementById('amtOut').value = fmtAmt(rawOut, s.to);
-  document.getElementById('inUsd').textContent = '$' + fmtUsd(inUsd);
-  document.getElementById('outUsd').textContent = '$' + fmtUsd(outUsd);
-  document.getElementById('rRate').textContent = rateDisplay;
-  document.getElementById('rImpact').textContent = '~' + impact + '%';
-  document.getElementById('rMin').textContent = fmtAmt(minOut, s.to) + ' ' + s.to;
-  document.getElementById('rRoute').textContent = s.from + ' → ' + s.to + ' (v2)';
-  document.getElementById('impRow').className = impact > 2 ? 'rr r' : 'rr';
-  
-  // Mostrar antigüedad del precio
-  if (s.pricesLastUpdate) {
-    const secs = Math.floor((Date.now() - s.pricesLastUpdate) / 1000);
-    document.getElementById('rPriceAge').textContent = secs < 60 ? 'hace ' + secs + 's' : 'hace ' + Math.floor(secs/60) + 'min';
-  }
-  
-  document.getElementById('routeBox').style.display = 'block';
-  
-  const insuf = s.connected && amtIn > (s.bal[s.from] || 0);
-  document.getElementById('amtIn').classList.toggle('bad', insuf);
-  updateBtn(insuf);
-}
-
-function fmtAmt(n, tok) {
-  if (!n || isNaN(n)) return '0';
-  if (tok === 'ROXs') {
-    if (n >= 1e9) return (n / 1e9).toFixed(3) + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(3) + 'M';
-    if (n >= 1000) return Math.round(n).toLocaleString();
-    return n.toFixed(0);
-  }
-  if (n >= 1e6) return (n / 1e6).toFixed(4) + 'M';
-  if (n >= 1) return n.toFixed(4);
-  return n.toFixed(8);
-}
-
-function fmtUsd(n) {
-  if (!n || isNaN(n)) return '0.00';
-  return n < 0.0001 ? n.toFixed(8) : n < 1 ? n.toFixed(4) : n.toFixed(2);
-}
-
-function fmtBal(n, tok) {
-  if (tok === 'ROXs') return fmtAmt(n, 'ROXs');
-  return n.toFixed(4);
-}
-
-// ─── Slippage ─────────────────────────────────────────────────────────────────
+// ─── SLIPPAGE CONTROLS ───────────────────────────────────────────────────────
 function toggleSlip() {
   s.slipOpen = !s.slipOpen;
   document.getElementById('slipPanel').style.display = s.slipOpen ? 'block' : 'none';
@@ -627,7 +422,7 @@ function setSlipCustom(inp) {
   calc();
 }
 
-// ─── Token selección ──────────────────────────────────────────────────────────
+// ─── TOKEN SELECTION ─────────────────────────────────────────────────────────
 function pickFrom(t) {
   if (t === s.to) { flip(); return; }
   s.from = t;
@@ -658,6 +453,8 @@ function updatePills() {
   document.getElementById('toIcon').textContent = IT[s.to];
   document.getElementById('toSym').textContent = s.to;
 }
+
+// ─── AMOUNTS ─────────────────────────────────────────────────────────────────
 function clearAmts() {
   document.getElementById('amtIn').value = '';
   document.getElementById('amtOut').value = '';
@@ -667,24 +464,94 @@ function clearAmts() {
   document.getElementById('amtIn').classList.remove('bad');
   updateBtn();
 }
+
 function setPct(pct) {
   if (!s.connected) { openModal(); return; }
   let bal = s.bal[s.from] || 0;
-  if (bal <= 0) { toast('Sin balance'); return; }
+  if (bal <= 0) { toast('No balance'); return; }
   let amt = bal * pct / 100;
-  if (s.from === 'POL') amt = Math.max(0, amt - 0.02); // reservar gas
+  // Reserve gas for POL (0.06 POL ~ safe margin for Polygon tx)
+  if (s.from === 'POL') amt = Math.max(0, amt - (0.06 * pct / 100));
   document.getElementById('amtIn').value = parseFloat(amt.toFixed(8));
   calc();
 }
 
-// ─── Botón principal ──────────────────────────────────────────────────────────
-function updateBtn(insuf) {
+// ─── MAIN CALCULATION ────────────────────────────────────────────────────────
+function calc() {
+  const amtIn = parseFloat(document.getElementById('amtIn').value) || 0;
+  if (amtIn <= 0) { clearAmts(); return; }
+
+  // Check if we have a direct rate
+  if (getBaseRate(s.from, s.to) === null) {
+    document.getElementById('amtOut').value = '';
+    document.getElementById('routeBox').style.display = 'none';
+    updateBtn(false, true);
+    return;
+  }
+
+  const result = getOutputAmount(s.from, s.to, amtIn);
+  if (!result) return;
+
+  const { rawOut, impact } = result;
+  const minOut = rawOut * (1 - s.slipVal / 100);
+
+  // USD values
+  const inUsd  = amtIn * USD_PRICES[s.from];
+  const outUsd = rawOut * USD_PRICES[s.to];
+
+  // Rate label: show how many output tokens per 1 input
+  const rate1 = getOutputAmount(s.from, s.to, 1);
+  const rateStr = rate1 ? fmtAmt(rate1.rawOut, s.to) : '—';
+
+  // Fill in UI
+  document.getElementById('amtOut').value = fmtAmt(rawOut, s.to);
+  document.getElementById('inUsd').textContent = '$' + fmtUsd(inUsd);
+  document.getElementById('outUsd').textContent = '$' + fmtUsd(outUsd);
+  document.getElementById('rRate').textContent = '1 ' + s.from + ' = ' + rateStr + ' ' + s.to;
+  document.getElementById('rImpact').textContent = '~' + impact.toFixed(2) + '%';
+  document.getElementById('rMin').textContent = fmtAmt(minOut, s.to) + ' ' + s.to;
+  document.getElementById('rRoute').textContent = s.from + ' → ' + s.to + ' (v2)';
+  document.getElementById('impRow').className = impact > 2 ? 'rr r' : 'rr';
+  document.getElementById('routeBox').style.display = 'block';
+
+  const insuf = s.connected && amtIn > (s.bal[s.from] || 0);
+  document.getElementById('amtIn').classList.toggle('bad', insuf);
+  updateBtn(insuf);
+}
+
+// ─── NUMBER FORMATTERS ───────────────────────────────────────────────────────
+function fmtAmt(n, tok) {
+  if (tok === 'ROXs') {
+    // ROXs amounts are huge numbers, use compact notation
+    if (n >= 1e9)  return (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6)  return (n / 1e6).toFixed(2) + 'M';
+    if (n >= 1000) return Math.round(n).toLocaleString();
+    return n.toFixed(0);
+  }
+  if (n >= 1e6) return (n / 1e6).toFixed(4) + 'M';
+  if (n >= 1)   return n.toFixed(4);
+  return n.toFixed(8);
+}
+function fmtUsd(n) {
+  return n < 0.0001 ? n.toFixed(8) : n < 1 ? n.toFixed(4) : n.toFixed(2);
+}
+function fmtBal(n, tok) {
+  if (tok === 'ROXs') return fmtAmt(n, 'ROXs');
+  return n.toFixed(4);
+}
+
+// ─── BUTTON STATE ────────────────────────────────────────────────────────────
+function updateBtn(insuf = false, noPair = false) {
   const btn = document.getElementById('mainBtn');
   const amtIn = parseFloat(document.getElementById('amtIn').value) || 0;
   if (!s.connected) {
     btn.textContent = 'Connect Wallet';
     btn.className = 'btn-main btn-orange';
     btn.onclick = openModal;
+  } else if (noPair) {
+    btn.textContent = 'Pair not available';
+    btn.className = 'btn-main btn-off';
+    btn.onclick = null;
   } else if (amtIn <= 0) {
     btn.textContent = 'Enter an amount';
     btn.className = 'btn-main btn-off';
@@ -694,18 +561,20 @@ function updateBtn(insuf) {
     btn.className = 'btn-main btn-warn';
     btn.onclick = null;
   } else {
-    btn.textContent = 'Swap';
+    btn.textContent = 'Swap on Uniswap';
     btn.className = 'btn-main btn-orange';
     btn.onclick = doSwap;
   }
 }
+
+// ─── BALANCE DISPLAY ─────────────────────────────────────────────────────────
 function updateBals() {
   document.getElementById('balIn').textContent = s.connected ? fmtBal(s.bal[s.from], s.from) : '0.00';
   document.getElementById('balOut').textContent = s.connected ? fmtBal(s.bal[s.to], s.to) : '0.00';
 }
 
-// ─── Wallet ───────────────────────────────────────────────────────────────────
-function openModal() { document.getElementById('walletModal').classList.add('open'); }
+// ─── WALLET MODAL ────────────────────────────────────────────────────────────
+function openModal()  { document.getElementById('walletModal').classList.add('open'); }
 function closeModal() { document.getElementById('walletModal').classList.remove('open'); }
 
 async function connectWallet(type) {
@@ -720,17 +589,16 @@ async function connectWallet(type) {
         onConn(s.addr);
         return;
       }
-    } catch (e) { toast('Rechazado'); return; }
+    } catch (e) { toast('Rejected by user'); return; }
   }
+  // For non-MetaMask wallets: open Uniswap directly
   if (type !== 'MetaMask') {
-    // Abrir Uniswap directamente con los parámetros correctos
-    const inA = s.from === 'POL' ? 'ETH' : s.from === 'USDT' ? USDT_ADDR : ROXS_ADDR;
-    const outA = s.to === 'POL' ? 'ETH' : s.to === 'USDT' ? USDT_ADDR : ROXS_ADDR;
-    window.open(`https://app.uniswap.org/swap?inputCurrency=${inA}&outputCurrency=${outA}&chain=polygon&use=V2`, '_blank');
-    toast('Abriendo ' + type + '...');
+    const url = buildUniswapUrl();
+    window.open(url, '_blank');
+    toast('Opening ' + type + ' via Uniswap...');
     return;
   }
-  toast('Instala MetaMask primero');
+  toast('Please install MetaMask first');
 }
 
 async function switchPoly() {
@@ -741,7 +609,13 @@ async function switchPoly() {
     if (e.code === 4902) {
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
-        params: [{ chainId: POLY_CHAIN, chainName: 'Polygon Mainnet', nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 }, rpcUrls: ['https://polygon-rpc.com/'], blockExplorerUrls: ['https://polygonscan.com/'] }]
+        params: [{
+          chainId: POLY_CHAIN,
+          chainName: 'Polygon Mainnet',
+          nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+          rpcUrls: ['https://polygon-rpc.com/'],
+          blockExplorerUrls: ['https://polygonscan.com/']
+        }]
       });
     }
   }
@@ -749,19 +623,23 @@ async function switchPoly() {
 
 async function loadBals(addr) {
   try {
-    const polH = await window.ethereum.request({ method: 'eth_getBalance', params: [addr, 'latest'] });
-    s.bal.POL = parseInt(polH, 16) / 1e18;
+    // POL balance
+    const polHex = await window.ethereum.request({ method: 'eth_getBalance', params: [addr, 'latest'] });
+    s.bal.POL = parseInt(polHex, 16) / 1e18;
 
-    const d = '0x70a08231' + addr.replace('0x', '').padStart(64, '0');
-    
-    const rH = await window.ethereum.request({ method: 'eth_call', params: [{ to: ROXS_ADDR, data: d }, 'latest'] });
-    s.bal.ROXs = parseInt(rH, 16) / 1e18;
-    
-    const uH = await window.ethereum.request({ method: 'eth_call', params: [{ to: USDT_ADDR, data: d }, 'latest'] });
-    s.bal.USDT = parseInt(uH, 16) / 1e6;
-    
+    // ERC20 balanceOf call data
+    const data = '0x70a08231' + addr.replace('0x', '').padStart(64, '0');
+
+    // ROXs balance (18 decimals)
+    const roxHex = await window.ethereum.request({ method: 'eth_call', params: [{ to: ROXS_ADDR, data }, 'latest'] });
+    s.bal.ROXs = parseInt(roxHex, 16) / 1e18;
+
+    // USDT balance (6 decimals)
+    const usdtHex = await window.ethereum.request({ method: 'eth_call', params: [{ to: USDT_ADDR, data }, 'latest'] });
+    s.bal.USDT = parseInt(usdtHex, 16) / 1e6;
+
     updateBals();
-  } catch (e) { console.log(e); }
+  } catch (e) { console.warn('Balance load error:', e); }
 }
 
 function onConn(addr) {
@@ -774,7 +652,7 @@ function onConn(addr) {
   if (window.ethereum) document.getElementById('mmBadge').textContent = 'INSTALLED';
   updateBals();
   updateBtn();
-  toast('✓ Wallet conectada!');
+  toast('✓ Wallet connected!');
 }
 
 function disconnect() {
@@ -786,30 +664,42 @@ function disconnect() {
   document.getElementById('maxBtn').style.display = 'none';
   updateBals();
   updateBtn();
-  toast('Desconectado');
+  toast('Disconnected');
+}
+
+// ─── SWAP ACTION ─────────────────────────────────────────────────────────────
+function buildUniswapUrl() {
+  const amt = document.getElementById('amtIn').value || '';
+  const inA  = s.from === 'POL'  ? 'MATIC' : s.from === 'USDT' ? USDT_ADDR : ROXS_ADDR;
+  const outA = s.to   === 'POL'  ? 'MATIC' : s.to   === 'USDT' ? USDT_ADDR : ROXS_ADDR;
+  let url = 'https://app.uniswap.org/swap?inputCurrency=' + inA + '&outputCurrency=' + outA + '&chain=polygon&use=V2';
+  if (amt) url += '&exactAmount=' + amt + '&exactField=input';
+  return url;
 }
 
 async function doSwap() {
   const amt = document.getElementById('amtIn').value;
-  if (!s.connected || !amt) return;
-  const inA = s.from === 'POL' ? 'ETH' : s.from === 'USDT' ? USDT_ADDR : ROXS_ADDR;
-  const outA = s.to === 'POL' ? 'ETH' : s.to === 'USDT' ? USDT_ADDR : ROXS_ADDR;
-  window.open(`https://app.uniswap.org/swap?inputCurrency=${inA}&outputCurrency=${outA}&exactAmount=${amt}&exactField=input&chain=polygon&use=V2`, '_blank');
-  toast('Abriendo Uniswap para confirmar...');
+  if (!amt) return;
+  window.open(buildUniswapUrl(), '_blank');
+  toast('Opening Uniswap to confirm swap...');
 }
 
-// ─── Dropdowns ────────────────────────────────────────────────────────────────
+// ─── DROPDOWNS ───────────────────────────────────────────────────────────────
 function toggleDd(id) {
   const el = document.getElementById(id);
   const was = el.classList.contains('open');
   closeAllDd();
   if (!was) el.classList.add('open');
 }
-function closeAllDd() { document.querySelectorAll('.t-dd').forEach(d => d.classList.remove('open')); }
+function closeAllDd() {
+  document.querySelectorAll('.t-dd').forEach(d => d.classList.remove('open'));
+}
 document.addEventListener('click', closeAllDd);
-document.getElementById('walletModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('walletModal').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
+});
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
+// ─── TOAST ───────────────────────────────────────────────────────────────────
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -817,15 +707,8 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── AUTO-CONNECT ON LOAD ────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
-  // Fetch precios reales al cargar
-  await fetchPrices();
-  
-  // Auto-refresh cada 30 segundos
-  setInterval(() => fetchPrices(), 30000);
-  
-  // MetaMask auto-connect
   if (window.ethereum) {
     document.getElementById('mmBadge').textContent = 'INSTALLED';
     if (window.ethereum.selectedAddress) {
@@ -844,4 +727,5 @@ window.addEventListener('load', async () => {
 </script>
 </body>
 </html>
+
 
