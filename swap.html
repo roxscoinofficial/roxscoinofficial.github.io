@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ROXs Swap</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
-<script src="https://cdn.ethers.io/lib/ethers-5.7.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--gold:#F5A623;--gold2:#e8920a;--bg:#0a0e1a;--card:#13161f;--card2:#1c1f2a;--border:rgba(255,255,255,0.07);--text:#fff;--muted:#6b7280;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;}
@@ -270,167 +269,49 @@ footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px sol
     </div>
   </div>
 </footer>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script>
-// Configuración de Contratos y Red
-const ROXS = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
-const USDT_ADDR = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
-const POLY_HEX = '0x89';
+const ROXS='0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
+const USDT_ADDR='0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
+const POLY='0x89';
+let s={connected:false,addr:'',from:'POL',to:'ROXs',bal:{POL:0,USDT:0,ROXs:0},prices:{POL:0.22,USDT:1.0,ROXs:0.000000007158},slip:'auto',slipVal:0.5,slipOpen:false};
+const IC={POL:'i-pol',USDT:'i-usdt',ROXs:'i-roxs'};
+const IT={POL:'POL',USDT:'USDT',ROXs:'R'};
 
-// Estado de la aplicación
-let s = {
-    connected: false,
-    addr: '',
-    from: 'POL',
-    to: 'ROXs',
-    bal: { POL: 0, USDT: 0, ROXs: 0 },
-    prices: { POL: 0.45, USDT: 1.0, ROXs: 0.000000007158 }, // Precios base
-    slipVal: 0.5,
-    slipOpen: false
-};
+// Floating coins
+(function(){const bg=document.getElementById('bgCoins');const cfg=[{s:70,l:'7%',t:'40%',d:6},{s:52,l:'3%',t:'72%',d:8},{s:80,r:'8%',t:'22%',d:7},{s:55,r:'5%',t:'62%',d:9},{s:44,r:'16%',t:'82%',d:5}];cfg.forEach(c=>{const w=document.createElement('div');w.className='coin-wrap';w.style.cssText=(c.l?'left:'+c.l+';':'')+(c.r?'right:'+c.r+';':'')+'top:'+c.t+';animation-duration:'+c.d+'s;animation-delay:'+(Math.random()*3).toFixed(1)+'s;';const o=document.createElement('div');o.className='coin-obj';o.style.cssText='width:'+c.s+'px;height:'+c.s+'px;background:radial-gradient(circle at 35% 35%,#F5A623,#9a5500);font-size:'+(c.s*0.38)+'px;color:#1a0e00;box-shadow:0 8px 30px rgba(0,0,0,0.5),inset 0 2px 4px rgba(255,255,255,0.15);';o.textContent='R';w.appendChild(o);bg.appendChild(w);});})();
 
-const IC = { POL: 'i-pol', USDT: 'i-usdt', ROXs: 'i-roxs' };
-const IT = { POL: 'POL', USDT: 'USDT', ROXs: 'R' };
+// Fetch prices
+(async function(){try{const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network,tether&vs_currencies=usd');const d=await r.json();if(d['matic-network'])s.prices.POL=d['matic-network'].usd;}catch(e){}})();
 
-// --- 1. Inicialización y Precios ---
-async function fetchPrices() {
-    try {
-        const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network,tether&vs_currencies=usd');
-        const d = await r.json();
-        if (d['matic-network']) s.prices.POL = d['matic-network'].usd;
-        if (d['tether']) s.prices.USDT = d['tether'].usd;
-        calc();
-    } catch (e) { console.warn("Usando precios de respaldo local"); }
-}
-
-// --- 2. Gestión de Billetera y Balances ---
-async function loadBals(addr) {
-    if (!window.ethereum || !addr) return;
-    try {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        
-        // Balance de POL (18 decimales)
-        const polB = await provider.getBalance(addr);
-        s.bal.POL = parseFloat(ethers.utils.formatEther(polB));
-
-        // ABI mínima para balances
-        const abi = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)"];
-        
-        // Balance ROXs (18 decimales)
-        const roxsCon = new ethers.Contract(ROXS, abi, provider);
-        const rb = await roxsCon.balanceOf(addr);
-        s.bal.ROXs = parseFloat(ethers.utils.formatUnits(rb, 18));
-
-        // Balance USDT (6 decimales)
-        const usdtCon = new ethers.Contract(USDT_ADDR, abi, provider);
-        const ub = await usdtCon.balanceOf(addr);
-        s.bal.USDT = parseFloat(ethers.utils.formatUnits(ub, 6));
-
-        updateBals();
-        calc();
-    } catch (e) { console.error("Error cargando balances:", e); }
-}
-
-// --- 3. Lógica de Intercambio (Swap) ---
-function doSwap() {
-    const amt = document.getElementById('amtIn').value;
-    if (!s.connected) return openModal();
-    if (!amt || amt <= 0) return toast("Ingresa una cantidad");
-
-    // Mapeo para Uniswap (ETH significa token nativo en su interfaz para Polygon)
-    const tokenMap = { 'POL': 'ETH', 'USDT': USDT_ADDR, 'ROXs': ROXS };
-    
-    const inA = tokenMap[s.from];
-    const outA = tokenMap[s.to];
-    
-    toast("Abriendo Uniswap...");
-    const url = `https://app.uniswap.org/swap?inputCurrency=${inA}&outputCurrency=${outA}&exactAmount=${amt}&chain=polygon`;
-    window.open(url, '_blank');
-}
-
-// --- 4. Funciones de UI mejoradas ---
-function calc() {
-    const val = document.getElementById('amtIn').value;
-    const amtIn = parseFloat(val) || 0;
-    
-    if (amtIn <= 0) { clearAmts(); return; }
-
-    const inP = s.prices[s.from] || 0;
-    const outP = s.prices[s.to] || 0;
-    
-    if (inP === 0 || outP === 0) return;
-
-    const inUsd = amtIn * inP;
-    const rawOut = inUsd / outP;
-    const fee = s.from === 'ROXs' ? 0.04 : 0.02; // Ejemplo de fee
-    const netOut = rawOut * (1 - fee);
-
-    document.getElementById('amtOut').value = fmtAmt(netOut, s.to);
-    document.getElementById('inUsd').textContent = '$' + inUsd.toFixed(2);
-    document.getElementById('outUsd').textContent = '$' + (netOut * outP).toFixed(2);
-    
-    document.getElementById('rRate').textContent = `1 ${s.from} = ${fmtAmt(inP/outP, s.to)} ${s.to}`;
-    document.getElementById('routeBox').style.display = 'block';
-    
-    const insuf = s.connected && amtIn > s.bal[s.from];
-    updateBtn(insuf);
-}
-
-// Formateo inteligente de números
-function fmtAmt(n, tok) {
-    if (tok === 'ROXs') {
-        if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
-        return Math.floor(n).toLocaleString();
-    }
-    return n > 1 ? n.toFixed(4) : n.toFixed(6);
-}
-
-// --- 5. Eventos de Conexión ---
-async function connectWallet(type) {
-    closeModal();
-    if (window.ethereum) {
-        try {
-            const accs = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            s.addr = accs[0];
-            await switchPoly();
-            onConn(s.addr);
-        } catch (e) { toast("Conexión rechazada"); }
-    } else {
-        toast("Instala MetaMask");
-    }
-}
-
-async function switchPoly() {
-    try {
-        await window.ethereum.request({ 
-            method: 'wallet_switchEthereumChain', 
-            params: [{ chainId: POLY_HEX }] 
-        });
-    } catch (e) {
-        if (e.code === 4902) {
-            toast("Agrega la red Polygon a MetaMask");
-        }
-    }
-}
-
-function onConn(addr) {
-    s.connected = true;
-    document.getElementById('wAddr').textContent = addr.slice(0,6) + '...' + addr.slice(-4);
-    document.getElementById('wPill').style.display = 'flex';
-    document.getElementById('btnConn').style.display = 'none';
-    loadBals(addr);
-}
-
-// Listeners de MetaMask
-if (window.ethereum) {
-    window.ethereum.on('accountsChanged', (accs) => {
-        if (accs.length) onConn(accs[0]);
-        else location.reload();
-    });
-    window.ethereum.on('chainChanged', () => location.reload());
-}
-
-window.addEventListener('load', fetchPrices);
+function toggleSlip(){s.slipOpen=!s.slipOpen;document.getElementById('slipPanel').style.display=s.slipOpen?'block':'none';}
+function setSlip(btn,val){document.querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('slipCustom').value='';s.slip=val;s.slipVal=val==='auto'?0.5:parseFloat(val);calc();}
+function setSlipCustom(inp){let v=parseFloat(inp.value);if(v>5.5){v=5.5;inp.value=5.5;}if(v<0.1)return;document.querySelectorAll('.sb').forEach(b=>b.classList.remove('on'));s.slip=v;s.slipVal=v;calc();}
+function pickFrom(t){if(t===s.to){flip();return;}s.from=t;updatePills();clearAmts();updateBals();closeAllDd();}
+function pickTo(t){if(t===s.from){flip();return;}s.to=t;updatePills();clearAmts();updateBals();closeAllDd();}
+function flip(){[s.from,s.to]=[s.to,s.from];updatePills();clearAmts();updateBals();}
+function updatePills(){document.getElementById('fromIcon').className='t-icon '+IC[s.from];document.getElementById('fromIcon').textContent=IT[s.from];document.getElementById('fromSym').textContent=s.from;document.getElementById('toIcon').className='t-icon '+IC[s.to];document.getElementById('toIcon').textContent=IT[s.to];document.getElementById('toSym').textContent=s.to;}
+function clearAmts(){document.getElementById('amtIn').value='';document.getElementById('amtOut').value='';document.getElementById('inUsd').textContent='$0.00';document.getElementById('outUsd').textContent='$0.00';document.getElementById('routeBox').style.display='none';document.getElementById('amtIn').classList.remove('bad');updateBtn();}
+function setPct(pct){if(!s.connected){openModal();return;}let bal=s.bal[s.from]||0;if(bal<=0){toast('No balance');return;}let amt=bal*pct/100;if(s.from==='POL')amt=Math.max(0,amt-0.02);document.getElementById('amtIn').value=parseFloat(amt.toFixed(8));calc();}
+function calc(){const amtIn=parseFloat(document.getElementById('amtIn').value)||0;if(amtIn<=0){clearAmts();return;}const inP=s.prices[s.from],outP=s.prices[s.to];const inUsd=amtIn*inP;const fee=s.from==='ROXs'?0.04:0.02;const rawOut=(inUsd/outP)*(1-fee);const minOut=rawOut*(1-s.slipVal/100);const impact=inUsd>50?2.5:inUsd>10?0.8:0.3;document.getElementById('amtOut').value=fmtAmt(rawOut,s.to);document.getElementById('inUsd').textContent='$'+fmtUsd(inUsd);document.getElementById('outUsd').textContent='$'+fmtUsd(rawOut*outP);document.getElementById('rRate').textContent='1 '+s.from+' = '+fmtAmt(inP/outP,s.to)+' '+s.to;document.getElementById('rImpact').textContent='~'+impact+'%';document.getElementById('rMin').textContent=fmtAmt(minOut,s.to)+' '+s.to;document.getElementById('rRoute').textContent=s.from+' → '+s.to+' (v2)';document.getElementById('impRow').className=impact>2?'rr r':'rr';document.getElementById('routeBox').style.display='block';const insuf=s.connected&&amtIn>(s.bal[s.from]||0);document.getElementById('amtIn').classList.toggle('bad',insuf);updateBtn(insuf);}
+function fmtAmt(n,tok){if(tok==='ROXs'){if(n>=1e9)return(n/1e9).toFixed(2)+'B';if(n>=1e6)return(n/1e6).toFixed(2)+'M';if(n>=1000)return Math.round(n).toLocaleString();return n.toFixed(0);}if(n>=1e6)return(n/1e6).toFixed(4)+'M';if(n>=1)return n.toFixed(4);return n.toFixed(8);}
+function fmtUsd(n){return n<0.0001?n.toFixed(8):n<1?n.toFixed(4):n.toFixed(2);}
+function fmtBal(n,tok){if(tok==='ROXs')return fmtAmt(n,'ROXs');return n.toFixed(4);}
+function updateBtn(insuf){const btn=document.getElementById('mainBtn');const amtIn=parseFloat(document.getElementById('amtIn').value)||0;if(!s.connected){btn.textContent='Connect Wallet';btn.className='btn-main btn-orange';btn.onclick=openModal;}else if(amtIn<=0){btn.textContent='Enter an amount';btn.className='btn-main btn-off';btn.onclick=null;}else if(insuf){btn.textContent='Insufficient '+s.from+' balance';btn.className='btn-main btn-warn';btn.onclick=null;}else{btn.textContent='Swap';btn.className='btn-main btn-orange';btn.onclick=doSwap;}}
+function updateBals(){document.getElementById('balIn').textContent=s.connected?fmtBal(s.bal[s.from],s.from):'0.00';document.getElementById('balOut').textContent=s.connected?fmtBal(s.bal[s.to],s.to):'0.00';}
+function openModal(){document.getElementById('walletModal').classList.add('open');}
+function closeModal(){document.getElementById('walletModal').classList.remove('open');}
+async function connectWallet(type){closeModal();if(type==='MetaMask'&&window.ethereum){try{const accs=await window.ethereum.request({method:'eth_requestAccounts'});if(accs.length){s.addr=accs[0];await switchPoly();await loadBals(s.addr);onConn(s.addr);return;}}catch(e){toast('Rejected');return;}}if(type!=='MetaMask'){window.open('https://app.uniswap.org/swap?inputCurrency=ETH&outputCurrency='+ROXS+'&chain=polygon','_blank');toast('Opening '+type+'...');return;}toast('Install MetaMask first');}
+async function switchPoly(){if(!window.ethereum)return;try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:POLY}]});}catch(e){if(e.code===4902)await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:POLY,chainName:'Polygon Mainnet',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-rpc.com/'],blockExplorerUrls:['https://polygonscan.com/']}]});}}
+async function loadBals(addr){try{const polH=await window.ethereum.request({method:'eth_getBalance',params:[addr,'latest']});s.bal.POL=parseInt(polH,16)/1e18;const d='0x70a08231'+addr.replace('0x','').padStart(64,'0');const rH=await window.ethereum.request({method:'eth_call',params:[{to:ROXS,data:d},'latest']});s.bal.ROXs=parseInt(rH,16)/1e18;const uH=await window.ethereum.request({method:'eth_call',params:[{to:USDT_ADDR,data:d},'latest']});s.bal.USDT=parseInt(uH,16)/1e6;updateBals();}catch(e){console.log(e);}}
+function onConn(addr){s.connected=true;const sh=addr.slice(0,6)+'...'+addr.slice(-4);document.getElementById('wAddr').textContent=sh;document.getElementById('wPill').style.display='flex';document.getElementById('btnConn').style.display='none';document.getElementById('maxBtn').style.display='inline-block';if(window.ethereum)document.getElementById('mmBadge').textContent='INSTALLED';updateBals();updateBtn();toast('Wallet connected!');}
+function disconnect(){s.connected=false;s.addr='';s.bal={POL:0,USDT:0,ROXs:0};document.getElementById('wPill').style.display='none';document.getElementById('btnConn').style.display='block';document.getElementById('maxBtn').style.display='none';updateBals();updateBtn();toast('Disconnected');}
+async function doSwap(){const amt=document.getElementById('amtIn').value;if(!s.connected||!amt)return;const inA=s.from==='POL'?'ETH':s.from==='USDT'?USDT_ADDR:ROXS;const outA=s.to==='POL'?'ETH':s.to==='USDT'?USDT_ADDR:ROXS;window.open('https://app.uniswap.org/swap?inputCurrency='+inA+'&outputCurrency='+outA+'&exactAmount='+amt+'&exactField=input&chain=polygon&use=V2','_blank');toast('Opening Uniswap to confirm...');}
+function toggleDd(id){const el=document.getElementById(id);const was=el.classList.contains('open');closeAllDd();if(!was)el.classList.add('open');}
+function closeAllDd(){document.querySelectorAll('.t-dd').forEach(d=>d.classList.remove('open'));}
+document.addEventListener('click',closeAllDd);
+document.getElementById('walletModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+window.addEventListener('load',async()=>{if(window.ethereum){document.getElementById('mmBadge').textContent='INSTALLED';if(window.ethereum.selectedAddress){s.addr=window.ethereum.selectedAddress;await switchPoly();await loadBals(s.addr);onConn(s.addr);}window.ethereum.on('accountsChanged',async a=>{if(a.length){s.addr=a[0];await loadBals(s.addr);onConn(s.addr);}else disconnect();});window.ethereum.on('chainChanged',()=>location.reload());}});
 </script>
 </body>
 </html>
