@@ -1,441 +1,167 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ROXs Swap</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<title>ROXs Swap PRO</title>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{--gold:#F5A623;--gold2:#e8920a;--bg:#0a0e1a;--card:#13161f;--card2:#1c1f2a;--border:rgba(255,255,255,0.07);--text:#fff;--muted:#6b7280;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;}
-body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
-.bg-grad{position:absolute;inset:0;background:radial-gradient(ellipse at 12% 50%,rgba(245,166,35,0.13) 0%,transparent 48%),radial-gradient(ellipse at 88% 28%,rgba(30,60,200,0.11) 0%,transparent 48%);}
-.coin-wrap{position:absolute;animation:floatCoin ease-in-out infinite;}
-.coin-obj{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;}
-@keyframes floatCoin{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-22px) rotate(8deg);}}
-nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:15px 40px;border-bottom:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(10px);}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.logo-coin{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F5A623,#C8720A);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:19px;color:#1a0e00;box-shadow:0 0 20px rgba(245,166,35,0.45);}
-.logo-top{display:block;font-size:17px;font-weight:900;color:#fff;letter-spacing:1px;}
-.logo-bot{display:block;font-size:12px;font-weight:700;color:var(--gold);}
-.nav-links{display:flex;gap:2px;}
-.nav-a{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;color:rgba(255,255,255,0.6);text-decoration:none;transition:all .2s;background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;}
-.nav-a:hover,.nav-a.on{color:#fff;background:rgba(255,255,255,0.07);}
-.nav-r{display:flex;align-items:center;gap:8px;}
-.btn-conn{background:linear-gradient(135deg,#F5A623,#e8920a);border:none;border-radius:12px;padding:10px 20px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:#1a0e00;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(245,166,35,0.3);}
-.btn-conn:hover{opacity:.9;transform:translateY(-1px);}
-.w-pill{display:none;align-items:center;gap:7px;background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:12px;padding:8px 14px;cursor:pointer;}
-.w-dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
-.w-addr{font-size:13px;font-weight:700;color:rgba(255,255,255,0.8);}
-main{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;padding:50px 16px 60px;}
-.swap-wrap{width:100%;max-width:436px;}
-.swap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.swap-title{font-size:28px;font-weight:900;}
-.s-icon{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:rgba(255,255,255,0.4);transition:all .2s;}
-.s-icon:hover{background:rgba(255,255,255,0.1);color:#fff;}
-.slip{display:none;background:rgba(255,255,255,0.03);border-radius:14px;padding:12px 14px;margin-bottom:10px;border:1px solid var(--border);}
-.slip-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-.slip-lbl{font-size:12px;color:var(--muted);flex:1;}
-.sb{background:rgba(255,255,255,0.05);border:1px solid transparent;border-radius:8px;padding:5px 11px;font-size:12px;font-weight:700;color:rgba(255,255,255,0.5);cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
-.sb.on,.sb:hover{background:rgba(245,166,35,0.15);border-color:rgba(245,166,35,0.35);color:var(--gold);}
-.sb-inp{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:5px 8px;font-size:12px;color:#fff;width:58px;font-family:'Nunito',sans-serif;outline:none;text-align:center;}
-.sb-inp:focus{border-color:rgba(245,166,35,0.4);}
-.card{background:var(--card);border:1px solid rgba(255,255,255,0.06);border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.5);}
-.card-body{padding:14px 14px 2px;}
-.tbox{background:var(--card2);border-radius:14px;padding:14px;margin-bottom:3px;border:1.5px solid transparent;transition:border-color .2s;}
-.tbox:focus-within{border-color:rgba(245,166,35,0.2);}
-.tbox-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.tbox-lbl{font-size:13px;font-weight:700;color:rgba(255,255,255,0.45);}
-.pcts{display:flex;gap:4px;}
-.pct{background:rgba(255,255,255,0.05);border:none;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.45);cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
-.pct:hover{background:rgba(245,166,35,0.15);color:var(--gold);}
-.tbox-mid{display:flex;align-items:center;justify-content:space-between;gap:6px;}
-.t-inp{background:none;border:none;outline:none;font-family:'Nunito',sans-serif;font-size:32px;font-weight:800;color:#fff;width:54%;}
-.t-inp::placeholder{color:#22253a;}
-.t-inp[readonly]{color:rgba(255,255,255,0.65);cursor:default;}
-.t-inp.bad{color:var(--red);}
-.tok-pill{display:flex;align-items:center;gap:7px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.08);border-radius:50px;padding:7px 12px 7px 7px;cursor:pointer;transition:all .2s;position:relative;user-select:none;}
-.tok-pill:hover{background:rgba(0,0,0,0.5);border-color:rgba(245,166,35,0.2);}
-.t-icon{width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;}
-.i-pol{background:linear-gradient(135deg,#8247e5,#5a28b8);color:#fff;}
-.i-roxs{background:linear-gradient(135deg,#F5A623,#C8720A);color:#1a0e00;font-size:13px;}
-.i-usdt{background:#26a17b;color:#fff;font-size:9px;}
-.t-sym{font-size:16px;font-weight:800;color:#fff;}
-.t-car{font-size:10px;color:rgba(255,255,255,0.35);margin-left:1px;}
-.tbox-bot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
-.t-usd{font-size:13px;color:var(--muted);}
-.t-bal{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:5px;}
-.max-b{background:rgba(245,166,35,0.15);border:none;border-radius:5px;padding:2px 7px;font-size:11px;font-weight:800;color:var(--gold);cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;display:none;}
-.max-b:hover{background:rgba(245,166,35,0.25);}
-.t-dd{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#16192a;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:6px;min-width:175px;z-index:50;box-shadow:0 20px 50px rgba(0,0,0,0.8);}
-.t-dd.open{display:block;}
-.ddi{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;cursor:pointer;transition:background .15s;}
-.ddi:hover{background:rgba(245,166,35,0.1);}
-.ddi-sym{font-size:14px;font-weight:800;color:#fff;}
-.ddi-name{font-size:11px;color:var(--muted);}
-.flip-wrap{display:flex;justify-content:center;margin:-3px 0;z-index:2;position:relative;}
-.flip-btn{width:38px;height:38px;background:var(--card2);border:3px solid var(--card);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px;color:rgba(255,255,255,0.4);transition:all .25s;}
-.flip-btn:hover{color:var(--gold);transform:rotate(180deg);}
-.route{background:rgba(255,255,255,0.025);border-radius:12px;padding:11px 13px;margin:10px 0 0;font-size:13px;font-weight:600;}
-.rr{display:flex;justify-content:space-between;padding:3px 0;color:rgba(255,255,255,0.38);}
-.rr span:last-child{color:rgba(255,255,255,0.72);}
-.rr.g span:last-child{color:var(--gold);}
-.rr.r span:last-child{color:var(--red);}
-.card-foot{padding:14px;}
-.btn-main{width:100%;padding:16px;border:none;border-radius:14px;font-family:'Nunito',sans-serif;font-size:17px;font-weight:800;cursor:pointer;transition:all .2s;}
-.btn-orange{background:linear-gradient(135deg,#F5A623,#e8920a);color:#1a0e00;box-shadow:0 4px 20px rgba(245,166,35,0.3);}
-.btn-orange:hover{opacity:.9;transform:translateY(-1px);}
-.btn-off{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);cursor:not-allowed;border:1px solid rgba(255,255,255,0.05);}
-.btn-warn{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.2);cursor:not-allowed;}
-.powered{text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,0.18);margin-top:10px;}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:200;align-items:center;justify-content:center;}
-.overlay.open{display:flex;}
-.modal{background:#13161f;border:1px solid rgba(255,255,255,0.08);border-radius:24px;width:90%;max-width:370px;overflow:hidden;}
-.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.05);}
-.modal-help{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.35);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.modal-tit{font-size:17px;font-weight:800;}
-.modal-x{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.modal-x:hover{background:rgba(255,255,255,0.12);color:#fff;}
-.wlist{padding:10px;}
-.wi{display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:14px;cursor:pointer;border:1px solid transparent;transition:all .15s;}
-.wi:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.06);}
-.w-logo{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-.wl-wc{background:linear-gradient(135deg,#3b82f6,#1d4ed8);}
-.wl-mm{background:linear-gradient(135deg,#f6851b,#c86a10);}
-.wl-tw{background:linear-gradient(135deg,#3375bb,#1a5aa0);}
-.wl-bn{background:linear-gradient(135deg,#F5A623,#C8720A);}
-.wi-name{font-size:15px;font-weight:800;}
-.wi-desc{font-size:11px;color:var(--muted);margin-top:1px;}
-.wi-badge{margin-left:auto;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;}
-.bg-green{background:rgba(34,197,94,0.12);color:var(--green);}
-.bg-blue{background:rgba(59,130,246,0.12);color:var(--blue);}
-.wi-arr{color:rgba(255,255,255,0.2);margin-left:auto;font-size:16px;}
-.modal-ftr{padding:13px 18px;border-top:1px solid rgba(255,255,255,0.04);text-align:center;font-size:12px;color:rgba(255,255,255,0.18);}
-footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);border-top:1px solid rgba(255,255,255,0.04);padding:40px 60px 28px;}
-.foot-grid{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:30px;}
-.fb-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.fb-coin{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F5A623,#C8720A);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#1a0e00;}
-.fb-name{font-size:19px;font-weight:900;}
-.fb-name span{color:var(--gold);}
-.fb-copy{font-size:13px;color:var(--muted);}
-.foot-cols{display:flex;gap:60px;}
-.fc h4{font-size:13px;font-weight:800;color:rgba(255,255,255,0.4);margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase;}
-.fc a{display:block;font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:9px;transition:color .2s;}
-.fc a:hover{color:#fff;}
-.socials{display:flex;gap:12px;margin-top:20px;}
-.soc{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:rgba(255,255,255,0.5);text-decoration:none;transition:all .2s;}
-.soc:hover{background:rgba(255,255,255,0.12);color:#fff;}
-.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:11px 20px;font-size:14px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:300;white-space:nowrap;}
-.toast.show{opacity:1;}
-.live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:var(--green);margin-bottom:12px;}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite;}
-@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
-@media(max-width:600px){nav{padding:14px 16px;}.nav-links{display:none;}footer{padding:30px 20px 24px;}.foot-cols{gap:30px;}.foot-grid{flex-direction:column;}}
+body{background:#0a0e1a;color:#fff;font-family:sans-serif;display:flex;justify-content:center;padding-top:60px}
+.box{background:#13161f;padding:20px;border-radius:16px;width:360px}
+input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none}
+button{background:#F5A623;font-weight:bold;cursor:pointer}
 </style>
 </head>
+
 <body>
-<div class="bg"><div class="bg-grad"></div><div id="bgCoins"></div></div>
-<nav>
-  <a class="logo" href="index.html">
-    <div class="logo-coin">R</div>
-    <div><span class="logo-top">ROXs</span><span class="logo-bot">Swap</span></div>
-  </a>
-  <div class="nav-links">
-    <a class="nav-a on" href="swap.html">Swap</a>
-    <a class="nav-a" href="index.html">Home</a>
-    <a class="nav-a" href="https://x.com/ROXsCoin" target="_blank">Twitter ↗</a>
-    <a class="nav-a" href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">Contract ↗</a>
-  </div>
-  <div class="nav-r">
-    <div class="s-icon" onclick="toggleSlip()" title="Settings">⚙</div>
-    <div class="w-pill" id="wPill" onclick="disconnect()">
-      <div class="w-dot"></div><span class="w-addr" id="wAddr"></span>
-    </div>
-    <button class="btn-conn" id="btnConn" onclick="openModal()">Connect</button>
-  </div>
-</nav>
-<main>
-  <div class="swap-wrap">
-    <div class="swap-head">
-      <span class="swap-title">Swap</span>
-      <div class="s-icon" onclick="toggleSlip()">⚙</div>
-    </div>
-    <div class="live-badge"><span class="live-dot"></span> Live rates · Uniswap v2 · Polygon</div>
-    <div class="slip" id="slipPanel">
-      <div class="slip-row">
-        <span class="slip-lbl">Max. slippage</span>
-        <button class="sb on" onclick="setSlip(this,'auto')">Auto</button>
-        <button class="sb" onclick="setSlip(this,0.5)">0.5%</button>
-        <button class="sb" onclick="setSlip(this,1)">1%</button>
-        <button class="sb" onclick="setSlip(this,2)">2%</button>
-        <button class="sb" onclick="setSlip(this,5.5)">5.5%</button>
-        <input class="sb-inp" id="slipCustom" type="number" min="0.1" max="5.5" placeholder="%" oninput="setSlipCustom(this)"/>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <!-- SELL BOX -->
-        <div class="tbox">
-          <div class="tbox-top">
-            <span class="tbox-lbl">Sell</span>
-            <div class="pcts">
-              <button class="pct" onclick="setPct(25)">25%</button>
-              <button class="pct" onclick="setPct(50)">50%</button>
-              <button class="pct" onclick="setPct(75)">75%</button>
-              <button class="pct" onclick="setPct(100)">MAX</button>
-            </div>
-          </div>
-          <div class="tbox-mid">
-            <input class="t-inp" id="amtIn" type="number" min="0" placeholder="0.00" oninput="calc()"/>
-            <div class="tok-pill" id="fromPill" onclick="toggleDd('fromDd')">
-              <div class="t-icon i-pol" id="fromIcon">POL</div>
-              <span class="t-sym" id="fromSym">POL</span>
-              <span class="t-car">▼</span>
-              <div class="t-dd" id="fromDd">
-                <div class="ddi" onclick="pickFrom('POL');event.stopPropagation()"><div class="t-icon i-pol">POL</div><div><div class="ddi-sym">POL</div><div class="ddi-name">Polygon</div></div></div>
-                <div class="ddi" onclick="pickFrom('USDT');event.stopPropagation()"><div class="t-icon i-usdt">USDT</div><div><div class="ddi-sym">USDT</div><div class="ddi-name">Tether USD</div></div></div>
-                <div class="ddi" onclick="pickFrom('ROXs');event.stopPropagation()"><div class="t-icon i-roxs">R</div><div><div class="ddi-sym">ROXs</div><div class="ddi-name">ROXs Coin</div></div></div>
-              </div>
-            </div>
-          </div>
-          <div class="tbox-bot">
-            <span class="t-usd" id="inUsd">$0.00</span>
-            <span class="t-bal"><span id="balIn">0.00</span><button class="max-b" id="maxBtn" onclick="setPct(100)">MAX</button></span>
-          </div>
-        </div>
-        <div class="flip-wrap"><button class="flip-btn" onclick="flip()">⇅</button></div>
-        <!-- BUY BOX -->
-        <div class="tbox">
-          <div class="tbox-top"><span class="tbox-lbl">Buy</span></div>
-          <div class="tbox-mid">
-            <input class="t-inp" id="amtOut" type="number" placeholder="0.00" readonly/>
-            <div class="tok-pill" onclick="toggleDd('toDd')">
-              <div class="t-icon i-roxs" id="toIcon">R</div>
-              <span class="t-sym" id="toSym">ROXs</span>
-              <span class="t-car">▼</span>
-              <div class="t-dd" id="toDd">
-                <div class="ddi" onclick="pickTo('ROXs');event.stopPropagation()"><div class="t-icon i-roxs">R</div><div><div class="ddi-sym">ROXs</div><div class="ddi-name">ROXs Coin</div></div></div>
-                <div class="ddi" onclick="pickTo('POL');event.stopPropagation()"><div class="t-icon i-pol">POL</div><div><div class="ddi-sym">POL</div><div class="ddi-name">Polygon</div></div></div>
-                <div class="ddi" onclick="pickTo('USDT');event.stopPropagation()"><div class="t-icon i-usdt">USDT</div><div><div class="ddi-sym">USDT</div><div class="ddi-name">Tether USD</div></div></div>
-              </div>
-            </div>
-          </div>
-          <div class="tbox-bot">
-            <span class="t-usd" id="outUsd">$0.00</span>
-            <span class="t-bal" id="balOut">0.00</span>
-          </div>
-        </div>
-        <div class="route" id="routeBox" style="display:none">
-          <div class="rr g"><span>Rate</span><span id="rRate">—</span></div>
-          <div class="rr" id="impRow"><span>Price Impact</span><span id="rImpact">—</span></div>
-          <div class="rr"><span>Min. received</span><span id="rMin">—</span></div>
-          <div class="rr"><span>Route</span><span id="rRoute">—</span></div>
-          <div class="rr"><span>Network fee</span><span>~$0.01</span></div>
-        </div>
-      </div>
-      <div class="card-foot">
-        <button class="btn-main btn-orange" id="mainBtn" onclick="openModal()">Connect Wallet</button>
-        <div class="powered">Powered by Uniswap v2 · Polygon</div>
-      </div>
-    </div>
-  </div>
-</main>
+<div class="box">
+<h2>ROXs Swap PRO</h2>
 
-<!-- WALLET MODAL -->
-<div class="overlay" id="walletModal">
-  <div class="modal">
-    <div class="modal-hdr">
-      <button class="modal-help">?</button>
-      <span class="modal-tit">Connect Wallet</span>
-      <button class="modal-x" onclick="closeModal()">✕</button>
-    </div>
-    <div class="wlist">
-      <div class="wi" onclick="connectWallet('WalletConnect')"><div class="w-logo wl-wc">🔗</div><div><div class="wi-name">WalletConnect</div><div class="wi-desc">Scan with any wallet</div></div><span class="wi-badge bg-blue">QR CODE</span><span class="wi-arr">›</span></div>
-      <div class="wi" onclick="connectWallet('MetaMask')"><div class="w-logo wl-mm">🦊</div><div><div class="wi-name">MetaMask</div><div class="wi-desc">Browser extension</div></div><span class="wi-badge bg-green" id="mmBadge">DETECT</span><span class="wi-arr">›</span></div>
-      <div class="wi" onclick="connectWallet('Trust Wallet')"><div class="w-logo wl-tw">🛡️</div><div><div class="wi-name">Trust Wallet</div><div class="wi-desc">Mobile & browser</div></div><span class="wi-arr">›</span></div>
-      <div class="wi" onclick="connectWallet('Binance')"><div class="w-logo wl-bn">◈</div><div><div class="wi-name">Binance Wallet</div><div class="wi-desc">Binance Web3 Wallet</div></div><span class="wi-arr">›</span></div>
-    </div>
-    <div class="modal-ftr">UX by ROXs Swap · Polygon Network</div>
-  </div>
+<input id="amount" placeholder="Amount" type="number"/>
+
+<select id="from">
+  <option>POL</option>
+  <option>USDT</option>
+  <option>ROXs</option>
+</select>
+
+<select id="to">
+  <option>ROXs</option>
+  <option>POL</option>
+  <option>USDT</option>
+</select>
+
+<input id="slippage" value="1" type="number"/>
+
+<button onclick="mainAction()">Connect / Swap</button>
+
+<div id="info"></div>
 </div>
-<div class="toast" id="toast"></div>
-
-<footer>
-  <div class="foot-grid">
-    <div>
-      <div class="fb-logo"><div class="fb-coin">R</div><div class="fb-name">ROXs <span>Swap</span></div></div>
-      <div class="fb-copy">2025 ROXs Coin © All Rights Reserved.</div>
-      <div class="socials">
-        <a class="soc" href="https://x.com/ROXsCoin" target="_blank">𝕏</a>
-        <a class="soc" href="#" target="_blank">✈</a>
-        <a class="soc" href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">⬡</a>
-      </div>
-    </div>
-    <div class="foot-cols">
-      <div class="fc"><h4>Ecosystem</h4><a href="swap.html">Swap</a><a href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">Contract</a><a href="https://dex.coinmarketcap.com/token/polygon/0x94cf8a3041fca3c7b96d71269b3f9d4c4a07d05e" target="_blank">DexScan</a></div>
-      <div class="fc"><h4>Info</h4><a href="https://x.com/ROXsCoin" target="_blank">Twitter / X</a><a href="#">Telegram</a><a href="https://roxscoinofficial.github.io">Website</a></div>
-    </div>
-  </div>
-</footer>
 
 <script>
-// ─── CONFIG ─────────────────────────────────────────
-const ROUTER = "0xa5E0829CaCED8fFDD4De3c43696c57F7D7A678ff"; // QuickSwap / Uniswap V2 Polygon
+// ─── CONFIG ─────────────────────────
+const ROUTER = "0xa5E0829CaCED8fFDD4De3c43696c57F7D7A678ff";
 const ROXS   = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
 const USDT   = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
 const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
 
-// ─── STATE ─────────────────────────────────────────
-let provider, signer, router, account;
+let provider, signer, account, router;
 
-// ─── INIT ─────────────────────────────────────────
-async function connectWallet() {
-  if (!window.ethereum) return alert("Install MetaMask");
-
+// ─── CONNECT ───────────────────────
+async function connect(){
   provider = new ethers.providers.Web3Provider(window.ethereum);
   await provider.send("eth_requestAccounts", []);
   signer = provider.getSigner();
   account = await signer.getAddress();
 
-  router = new ethers.Contract(
-    ROUTER,
-    [
-      "function getAmountsOut(uint amountIn, address[] memory path) view returns (uint[] memory amounts)",
-      "function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) payable returns (uint[] memory amounts)",
-      "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)"
-    ],
-    signer
-  );
-
-  toast("Wallet conectada");
-}
-
-// ─── PATH LOGIC ────────────────────────────────────
-function getPath(from, to) {
-  const map = {
-    POL: WMATIC,
-    USDT: USDT,
-    ROXs: ROXS
-  };
-
-  const A = map[from];
-  const B = map[to];
-
-  if (A === B) return null;
-
-  // Direct pairs
-  if (
-    (A === WMATIC && B === ROXS) ||
-    (A === ROXS && B === WMATIC) ||
-    (A === USDT && B === ROXS) ||
-    (A === ROXS && B === USDT)
-  ) {
-    return [A, B];
+  const net = await provider.getNetwork();
+  if(net.chainId !== 137){
+    alert("Switch to Polygon");
+    return;
   }
 
-  // Route via USDT
-  return [A, USDT, B];
+  router = new ethers.Contract(ROUTER,[
+    "function getAmountsOut(uint,address[]) view returns (uint[])",
+    "function swapExactETHForTokens(uint,address[],address,uint) payable",
+    "function swapExactTokensForTokens(uint,uint,address[],address,uint)"
+  ], signer);
+
+  log("Connected: "+account);
 }
 
-// ─── PRICE REAL ────────────────────────────────────
-async function getAmountOut(amountIn, path) {
-  const amounts = await router.getAmountsOut(amountIn, path);
-  return amounts[amounts.length - 1];
+// ─── PATH ──────────────────────────
+function path(from,to){
+  const map={POL:WMATIC,USDT:USDT,ROXs:ROXS};
+  const A=map[from], B=map[to];
+
+  if(A===B) return null;
+
+  if(A===WMATIC||B===WMATIC) return [A,B];
+  return [A,WMATIC,B];
 }
 
-// ─── APPROVE ───────────────────────────────────────
-async function approve(token, amount) {
-  const erc20 = new ethers.Contract(
-    token,
-    [
-      "function approve(address spender, uint amount) public returns (bool)"
-    ],
-    signer
-  );
-
-  const tx = await erc20.approve(ROUTER, amount);
-  await tx.wait();
+// ─── DECIMALS ──────────────────────
+async function getDecimals(addr){
+  if(addr===WMATIC) return 18;
+  const c=new ethers.Contract(addr,["function decimals() view returns(uint8)"],provider);
+  return await c.decimals();
 }
 
-// ─── SWAP REAL ─────────────────────────────────────
-async function doSwapReal() {
-  if (!signer) return alert("Connect wallet");
+// ─── ALLOWANCE ─────────────────────
+async function checkApprove(token,amount){
+  const erc=new ethers.Contract(token,[
+    "function allowance(address,address)view returns(uint)",
+    "function approve(address,uint)"
+  ],signer);
 
-  const amt = document.getElementById("amtIn").value;
-  if (!amt || amt <= 0) return;
+  const allow=await erc.allowance(account,ROUTER);
+  if(allow.lt(amount)){
+    log("Approving...");
+    const tx=await erc.approve(ROUTER,amount);
+    await tx.wait();
+  }
+}
 
-  const from = s.from;
-  const to   = s.to;
+// ─── SWAP ──────────────────────────
+async function swap(){
+  const amt=document.getElementById("amount").value;
+  const from=document.getElementById("from").value;
+  const to=document.getElementById("to").value;
+  const slip=parseFloat(document.getElementById("slippage").value);
 
-  const path = getPath(from, to);
-  if (!path) return alert("Invalid pair");
+  const p=path(from,to);
+  if(!p) return alert("Invalid pair");
 
-  const deadline = Math.floor(Date.now() / 1000) + 60 * 10;
+  try{
+    if(from==="POL"){
+      const value=ethers.utils.parseEther(amt);
+      const out=await router.getAmountsOut(value,p);
+      const min=out[out.length-1].mul(100-slip).div(100);
 
-  try {
-    if (from === "POL") {
-      // POL → TOKEN
-      const value = ethers.utils.parseEther(amt);
-
-      const out = await getAmountOut(value, path);
-      const min = out.mul(95).div(100); // 5% slippage
-
-      const tx = await router.swapExactETHForTokens(
-        min,
-        path,
-        account,
-        deadline,
-        { value }
+      const tx=await router.swapExactETHForTokens(
+        min,p,account,Date.now()+600,
+        {value}
       );
 
-      toast("Swapping...");
+      log("Swapping...");
       await tx.wait();
-      toast("Swap DONE 🚀");
+      log("DONE 🚀");
 
-    } else {
-      // TOKEN → TOKEN
-      const decimals = from === "USDT" ? 6 : 18;
-      const amountIn = ethers.utils.parseUnits(amt, decimals);
+    }else{
+      const dec=await getDecimals(p[0]);
+      const amount=ethers.utils.parseUnits(amt,dec);
 
-      await approve(path[0], amountIn);
+      await checkApprove(p[0],amount);
 
-      const out = await getAmountOut(amountIn, path);
-      const min = out.mul(95).div(100);
+      const out=await router.getAmountsOut(amount,p);
+      const min=out[out.length-1].mul(100-slip).div(100);
 
-      const tx = await router.swapExactTokensForTokens(
-        amountIn,
-        min,
-        path,
-        account,
-        deadline
+      const tx=await router.swapExactTokensForTokens(
+        amount,min,p,account,Date.now()+600
       );
 
-      toast("Swapping...");
+      log("Swapping...");
       await tx.wait();
-      toast("Swap DONE 🚀");
+      log("DONE 🚀");
     }
 
-  } catch (e) {
+  }catch(e){
+    if(e.code===4001) log("Cancelled");
+    else log("Error");
     console.error(e);
-    toast("Error en swap");
   }
 }
 
-// ─── HOOK BOTÓN ────────────────────────────────────
-document.getElementById("mainBtn").onclick = async () => {
-  if (!account) {
-    await connectWallet();
-  } else {
-    await doSwapReal();
-  }
-};
+// ─── MAIN ──────────────────────────
+async function mainAction(){
+  if(!account) await connect();
+  else await swap();
+}
 
-// ─── SIMPLE TOAST ─────────────────────────────────
-function toast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
+function log(t){
+  document.getElementById("info").innerText=t;
 }
 </script>
+</body>
+</html>
