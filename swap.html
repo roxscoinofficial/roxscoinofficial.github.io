@@ -724,8 +724,232 @@ window.addEventListener('load', async () => {
     window.ethereum.on('chainChanged', () => location.reload());
   }
 });
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG REAL
+// ─────────────────────────────────────────────
+
+const ROXS_ADDR = "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E";
+const USDT_ADDR = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+const WPOL      = "0x0000000000000000000000000000000000001010"; // POL
+const ROUTER    = "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff"; // Uniswap v2 Polygon
+
+// ABI MINIMA
+const ERC20_ABI = [
+  "function approve(address spender,uint amount) external returns(bool)",
+  "function allowance(address owner,address spender) view returns(uint)",
+  "function balanceOf(address owner) view returns(uint)",
+  "function decimals() view returns(uint)"
+];
+
+const ROUTER_ABI = [
+  "function getAmountsOut(uint amountIn,address[] calldata path) view returns(uint[] memory amounts)",
+  "function swapExactETHForTokens(uint amountOutMin,address[] calldata path,address to,uint deadline) payable returns(uint[] memory)",
+  "function swapExactTokensForETH(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) returns(uint[] memory)",
+  "function swapExactTokensForTokens(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) returns(uint[] memory)"
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+
+let provider, signer, user;
+
+// ─────────────────────────────────────────────
+// CONNECT
+// ─────────────────────────────────────────────
+
+async function connectWallet() {
+  if (!window.ethereum) return alert("Install MetaMask");
+
+  provider = new ethers.providers.Web3Provider(window.ethereum);
+  await provider.send("eth_requestAccounts", []);
+  signer = provider.getSigner();
+  user = await signer.getAddress();
+
+  onConn(user);
+  loadBalances();
+}
+
+// ─────────────────────────────────────────────
+// BALANCES
+// ─────────────────────────────────────────────
+
+async function loadBalances() {
+  const pol = await provider.getBalance(user);
+  s.bal.POL = parseFloat(ethers.utils.formatEther(pol));
+
+  const rox = new ethers.Contract(ROXS_ADDR, ERC20_ABI, provider);
+  const usdt = new ethers.Contract(USDT_ADDR, ERC20_ABI, provider);
+
+  s.bal.ROXs = parseFloat(ethers.utils.formatUnits(await rox.balanceOf(user),18));
+  s.bal.USDT = parseFloat(ethers.utils.formatUnits(await usdt.balanceOf(user),6));
+
+  updateBals();
+}
+
+// ─────────────────────────────────────────────
+// PATH LOGIC (RUTAS)
+// ─────────────────────────────────────────────
+
+function getPath(from, to) {
+
+  const map = {
+    POL: WPOL,
+    ROXs: ROXS_ADDR,
+    USDT: USDT_ADDR
+  };
+
+  // Directo
+  if (
+    (from === "POL" && to === "ROXs") ||
+    (from === "ROXs" && to === "POL") ||
+    (from === "USDT" && to === "ROXs") ||
+    (from === "ROXs" && to === "USDT")
+  ) {
+    return [map[from], map[to]];
+  }
+
+  // Ruta intermedia
+  return [map[from], USDT_ADDR, map[to]];
+}
+
+// ─────────────────────────────────────────────
+// PRECIO REAL ON-CHAIN
+// ─────────────────────────────────────────────
+
+async function calc() {
+  const amt = document.getElementById("amtIn").value;
+  if (!amt || !provider) return;
+
+  const router = new ethers.Contract(ROUTER, ROUTER_ABI, provider);
+
+  const decimals = s.from === "USDT" ? 6 : 18;
+  const amountIn = ethers.utils.parseUnits(amt, decimals);
+
+  const path = getPath(s.from, s.to);
+
+  try {
+    const amounts = await router.getAmountsOut(amountIn, path);
+
+    const outDecimals = s.to === "USDT" ? 6 : 18;
+    const out = ethers.utils.formatUnits(amounts[amounts.length - 1], outDecimals);
+
+    document.getElementById("amtOut").value = out;
+
+  } catch(e){
+    document.getElementById("amtOut").value = "0";
+  }
+}
+
+// ─────────────────────────────────────────────
+// APPROVE
+// ─────────────────────────────────────────────
+
+async function approveIfNeeded(tokenAddr, amount) {
+  const token = new ethers.Contract(tokenAddr, ERC20_ABI, signer);
+
+  const allowance = await token.allowance(user, ROUTER);
+
+  if (allowance.lt(amount)) {
+    const tx = await token.approve(ROUTER, ethers.constants.MaxUint256);
+    toast("Approving...");
+    await tx.wait();
+  }
+}
+
+// ─────────────────────────────────────────────
+// SWAP REAL
+// ─────────────────────────────────────────────
+
+async function doSwap() {
+
+  const amt = document.getElementById("amtIn").value;
+  if (!amt) return;
+
+  const router = new ethers.Contract(ROUTER, ROUTER_ABI, signer);
+  const path = getPath(s.from, s.to);
+
+  const deadline = Math.floor(Date.now()/1000) + 60*10;
+
+  let tx;
+
+  try {
+
+    // POL → TOKEN
+    if (s.from === "POL") {
+
+      const value = ethers.utils.parseEther(amt);
+
+      tx = await router.swapExactETHForTokens(
+        0,
+        path,
+        user,
+        deadline,
+        { value }
+      );
+
+    }
+
+    // TOKEN → POL
+    else if (s.to === "POL") {
+
+      const decimals = s.from === "USDT" ? 6 : 18;
+      const amountIn = ethers.utils.parseUnits(amt, decimals);
+
+      await approveIfNeeded(path[0], amountIn);
+
+      tx = await router.swapExactTokensForETH(
+        amountIn,
+        0,
+        path,
+        user,
+        deadline
+      );
+
+    }
+
+    // TOKEN → TOKEN
+    else {
+
+      const decimals = s.from === "USDT" ? 6 : 18;
+      const amountIn = ethers.utils.parseUnits(amt, decimals);
+
+      await approveIfNeeded(path[0], amountIn);
+
+      tx = await router.swapExactTokensForTokens(
+        amountIn,
+        0,
+        path,
+        user,
+        deadline
+      );
+    }
+
+    toast("Swapping...");
+    await tx.wait();
+    toast("DONE 🚀");
+
+    loadBalances();
+
+  } catch(e) {
+    console.error(e);
+    toast("Error swap");
+  }
+}
+
+// ─────────────────────────────────────────────
+// AUTO CONNECT
+// ─────────────────────────────────────────────
+
+window.addEventListener("load", async () => {
+  if (window.ethereum && window.ethereum.selectedAddress) {
+    await connectWallet();
+  }
+});
+
 </script>
-</body>
-</html>
 
 
