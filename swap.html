@@ -1,411 +1,503 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ROXs Swap</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROXs Coin — Next-Gen DeFi on Polygon</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&family=Exo+2:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --gold:#F5A623;--gold2:#e8920a;--bg:#0a0e1a;--card:#13161f;--card2:#1c1f2a;
-  --border:rgba(255,255,255,0.07);--text:#fff;--muted:#6b7280;--green:#22c55e;
+:root {
+  --cyan: #00f0ff;
+  --pink: #ff00ea;
+  --dark: #020408;
+  --card-bg: rgba(0, 240, 255, 0.04);
+  --border: rgba(0, 240, 255, 0.15);
+  --text-dim: rgba(255,255,255,0.6);
 }
-body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
-/* BACKGROUND */
-.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
-.bg-grad{position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse at 12% 50%,rgba(245,166,35,0.13) 0%,transparent 48%),
-    radial-gradient(ellipse at 88% 28%,rgba(30,60,200,0.11) 0%,transparent 48%);}
-.coin-wrap{position:absolute;animation:floatCoin ease-in-out infinite;}
-.coin-obj{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;}
-@keyframes floatCoin{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-22px) rotate(8deg);}}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
 
-/* NAV */
-nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
-  padding:15px 40px;border-bottom:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(10px);}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.logo-coin{width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,#F5A623,#C8720A);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:19px;color:#1a0e00;
-  box-shadow:0 0 20px rgba(245,166,35,0.45);}
-.logo-top{display:block;font-size:17px;font-weight:900;color:#fff;letter-spacing:1px;}
-.logo-bot{display:block;font-size:12px;font-weight:700;color:var(--gold);}
-.nav-links{display:flex;gap:2px;}
-.nav-a{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;
-  color:rgba(255,255,255,0.6);text-decoration:none;transition:all .2s;
-  background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;}
-.nav-a:hover,.nav-a.on{color:#fff;background:rgba(255,255,255,0.07);}
-.nav-r{display:flex;align-items:center;gap:8px;}
+body {
+  font-family: 'Exo 2', sans-serif;
+  background: var(--dark);
+  color: #fff;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
 
-/* MAIN */
-main{position:relative;z-index:5;display:flex;flex-direction:column;
-  align-items:center;padding:50px 16px 60px;}
-.swap-wrap{width:100%;max-width:480px;}
-.swap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.swap-title{font-size:28px;font-weight:900;}
-.swap-sub{font-size:13px;color:var(--muted);margin-top:4px;}
+canvas { position:fixed; top:0; left:0; z-index:0; pointer-events:none; }
 
-/* UNISWAP WIDGET CONTAINER */
-.widget-container{
-  width:100%;
-  background:var(--card);
-  border:1px solid rgba(255,255,255,0.06);
-  border-radius:20px;
-  overflow:hidden;
-  box-shadow:0 24px 60px rgba(0,0,0,0.5);
-  min-height:360px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+.wrap { position:relative; z-index:1; max-width:1100px; margin:auto; padding:0 24px; }
+
+/* ── NAV ── */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  display:flex; justify-content:space-between; align-items:center;
+  padding: 18px 40px;
+  background: rgba(2,4,8,0.7);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Orbitron'; font-size:1.1rem; font-weight:900;
+  background: linear-gradient(90deg,var(--cyan),var(--pink));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  letter-spacing:2px;
+}
+.nav-links { display:flex; gap:28px; }
+.nav-links a {
+  font-family:'Space Mono'; font-size:.75rem; color:var(--text-dim);
+  text-decoration:none; letter-spacing:1px; text-transform:uppercase; transition:.2s;
+}
+.nav-links a:hover { color:var(--cyan); }
+
+/* ── HERO ── */
+header {
+  min-height: 100vh;
+  display: flex; flex-direction:column; justify-content:center; align-items:center;
+  text-align: center;
+  padding: 120px 24px 80px;
+}
+
+.star-badge {
+  display:inline-block; margin-bottom:24px;
+  padding: 6px 18px; border: 1px solid var(--border); border-radius:30px;
+  font-family:'Space Mono'; font-size:.7rem; color:var(--cyan); letter-spacing:2px;
+  animation: pulse-border 3s infinite;
+}
+@keyframes pulse-border {
+  0%,100%{ box-shadow:0 0 0 0 rgba(0,240,255,.3); }
+  50%    { box-shadow:0 0 0 8px rgba(0,240,255,0); }
+}
+
+h1 {
+  font-family:'Orbitron'; font-size:clamp(3rem,8vw,6.5rem);
+  font-weight:900; line-height:1;
+  background:linear-gradient(135deg,#fff 0%,var(--cyan) 40%,var(--pink) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  animation: fadeUp .8s ease both;
+}
+
+.tagline {
+  margin-top:22px; max-width:600px;
+  font-size:1.05rem; font-weight:300; font-style:italic;
+  color: var(--text-dim); line-height:1.7;
+  animation: fadeUp .8s .2s ease both;
+}
+
+.hero-ctas {
+  margin-top:40px; display:flex; flex-wrap:wrap; gap:14px; justify-content:center;
+  animation: fadeUp .8s .4s ease both;
+}
+
+.btn {
+  padding:13px 26px; border-radius:40px; font-family:'Space Mono';
+  font-size:.82rem; font-weight:700; text-decoration:none; letter-spacing:1px;
+  transition: transform .25s, box-shadow .25s;
+}
+.btn-primary { background: linear-gradient(90deg,var(--pink),var(--cyan)); color:#000; }
+.btn-primary:hover { transform:scale(1.07); box-shadow:0 0 30px rgba(255,0,234,.5); }
+.btn-outline { border:1px solid var(--border); color:var(--cyan); background:transparent; }
+.btn-outline:hover { border-color:var(--cyan); background:rgba(0,240,255,.06); transform:scale(1.05); }
+
+.socials {
+  margin-top:30px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+  animation: fadeUp .8s .6s ease both;
+}
+.socials a {
+  padding:7px 16px; border-radius:20px;
+  background:rgba(255,255,255,.05); border:1px solid var(--border);
+  color:var(--text-dim); text-decoration:none; font-family:'Space Mono'; font-size:.72rem; transition:.2s;
+}
+.socials a:hover { color:var(--cyan); border-color:var(--cyan); }
+
+.hero-glow {
+  margin-top:60px;
+  width:min(340px,80vw); height:min(340px,80vw);
+  border-radius:50%;
+  background: radial-gradient(circle,rgba(0,240,255,.12) 0%,transparent 70%);
+  border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
   position:relative;
+  animation: float 6s ease-in-out infinite;
 }
-.widget-inner{
-  width:100%;
-  padding:0;
+.hero-glow::before {
+  content:''; position:absolute; inset:-1px; border-radius:50%;
+  background:conic-gradient(from 0deg,transparent,var(--cyan),var(--pink),transparent);
+  animation:spin 8s linear infinite; z-index:-1; opacity:.4;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes float {
+  0%,100%{ transform:translateY(0); }
+  50%     { transform:translateY(-18px); }
+}
+.hero-glow img { width:70%; border-radius:50%; }
+.hero-glow .fallback-icon { font-size:5rem; opacity:.6; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(30px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 
-/* Uniswap widget override styles */
-#uniswap-widget-container {
-  width: 100% !important;
-}
-#uniswap-widget-container > div {
-  width: 100% !important;
-  max-width: 100% !important;
-  border-radius: 20px !important;
-  border: none !important;
-  box-shadow: none !important;
+/* ── DIVIDER ── */
+.divider {
+  width:100%; height:1px;
+  background:linear-gradient(90deg,transparent,var(--border),transparent);
+  margin:70px 0;
 }
 
-/* POWERED */
-.powered{text-align:center;font-size:12px;font-weight:600;
-  color:rgba(255,255,255,0.18);margin-top:12px;}
-.powered a{color:rgba(245,166,35,0.5);text-decoration:none;}
-.powered a:hover{color:var(--gold);}
+/* ── SECTIONS ── */
+.section { margin:80px 0; }
+.section-label {
+  font-family:'Space Mono'; font-size:.7rem; color:var(--cyan);
+  letter-spacing:3px; text-transform:uppercase; margin-bottom:10px;
+}
+.section h2 { font-family:'Orbitron'; font-size:clamp(1.4rem,4vw,2rem); margin-bottom:20px; }
+.section p { color:var(--text-dim); line-height:1.8; max-width:700px; }
 
-/* INFO CARDS */
-.info-row{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;}
-.info-card{flex:1;min-width:120px;background:var(--card);border:1px solid rgba(255,255,255,0.06);
-  border-radius:14px;padding:14px 16px;}
-.info-card .label{font-size:12px;color:var(--muted);margin-bottom:6px;}
-.info-card .value{font-size:16px;font-weight:800;color:#fff;}
-.info-card .value.gold{color:var(--gold);}
+/* ── FEATURES ── */
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:28px; }
 
-/* FOOTER */
-footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);
-  border-top:1px solid rgba(255,255,255,0.04);padding:40px 60px 28px;}
-.foot-grid{display:flex;justify-content:space-between;align-items:flex-start;
-  margin-bottom:28px;flex-wrap:wrap;gap:30px;}
-.fb-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.fb-coin{width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,#F5A623,#C8720A);
-  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#1a0e00;}
-.fb-name{font-size:19px;font-weight:900;}
-.fb-name span{color:var(--gold);}
-.fb-copy{font-size:13px;color:var(--muted);}
-.foot-cols{display:flex;gap:60px;}
-.fc h4{font-size:13px;font-weight:800;color:rgba(255,255,255,0.4);
-  margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase;}
-.fc a{display:block;font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);
-  text-decoration:none;margin-bottom:9px;transition:color .2s;}
-.fc a:hover{color:#fff;}
-.socials{display:flex;gap:12px;margin-top:20px;}
-.soc{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.06);
-  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:15px;color:rgba(255,255,255,0.5);text-decoration:none;transition:all .2s;}
-.soc:hover{background:rgba(255,255,255,0.12);color:#fff;}
+.card {
+  background:var(--card-bg); border:1px solid var(--border);
+  border-radius:14px; padding:22px 18px;
+  transition: transform .3s, box-shadow .3s, border-color .3s;
+  position:relative; overflow:hidden;
+}
+.card::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(0,240,255,.06),transparent);
+  opacity:0; transition:.3s;
+}
+.card:hover { transform:translateY(-8px); border-color:rgba(0,240,255,.4); box-shadow:0 10px 40px rgba(0,240,255,.1); }
+.card:hover::after { opacity:1; }
+.card-icon { font-size:1.8rem; margin-bottom:12px; }
+.card-title { font-family:'Orbitron'; font-size:.8rem; letter-spacing:1px; margin-bottom:8px; color:var(--cyan); }
+.card-body { font-size:.85rem; color:var(--text-dim); line-height:1.6; }
 
-/* LOADING STATE */
-.widget-loading{display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:50px 20px;gap:14px;}
-.spinner{width:36px;height:36px;border:3px solid rgba(245,166,35,0.2);
-  border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.loading-text{font-size:14px;color:var(--muted);font-weight:600;}
+/* ── TOKENOMICS ── */
+.tknm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-top:28px; }
 
-@media(max-width:600px){
-  nav{padding:14px 16px;}
-  .nav-links{display:none;}
-  footer{padding:30px 20px 24px;}
-  .foot-cols{gap:30px;}
-  .foot-grid{flex-direction:column;}
+.tknm-item {
+  border:1px solid var(--border); border-radius:14px; padding:24px 20px; text-align:center;
+  background:var(--card-bg);
+}
+.tknm-num {
+  font-family:'Orbitron'; font-size:1.6rem;
+  background:linear-gradient(90deg,var(--cyan),var(--pink));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.tknm-sub {
+  font-family:'Space Mono'; font-size:.56rem; color:rgba(255,255,255,0.4);
+  margin-top:6px; line-height:1.6; word-break:break-word;
+}
+.tknm-label { font-family:'Space Mono'; font-size:.68rem; color:var(--text-dim); margin-top:8px; letter-spacing:1px; }
+
+/* ── SECURITY ── */
+.security-list { list-style:none; margin-top:20px; display:flex; flex-direction:column; gap:12px; }
+.security-list li {
+  display:flex; align-items:center; gap:12px;
+  font-family:'Space Mono'; font-size:.82rem; color:var(--text-dim);
+}
+.security-list li::before { content:'✓'; color:var(--cyan); font-size:1rem; min-width:20px; text-align:center; }
+
+/* ── SUPPORT / DONATION ── */
+.donation-box {
+  background:var(--card-bg); border:1px solid var(--border);
+  border-radius:16px; padding:36px 32px; margin-top:30px;
+}
+.donation-box h3 { font-family:'Orbitron'; font-size:1rem; margin-bottom:12px; color:var(--cyan); }
+.donation-box p { color:var(--text-dim); font-size:.9rem; line-height:1.7; margin-bottom:20px; }
+.accept-list { list-style:none; display:flex; gap:12px; flex-wrap:wrap; margin-bottom:24px; }
+.accept-list li {
+  padding:6px 14px; border-radius:20px;
+  border:1px solid var(--border); font-family:'Space Mono'; font-size:.75rem; color:var(--cyan);
+}
+.addr-label { font-family:'Space Mono'; font-size:.68rem; color:var(--text-dim); letter-spacing:1px; margin-bottom:8px; }
+.addr-value {
+  font-family:'Space Mono'; font-size:.8rem; color:#fff;
+  background:rgba(0,0,0,.3); border:1px solid var(--border);
+  border-radius:10px; padding:14px 70px 14px 18px; word-break:break-all;
+  cursor:pointer; transition:.2s; position:relative;
+}
+.addr-value:hover { border-color:var(--cyan); }
+.addr-value::after {
+  content:'📋 copy'; position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  font-size:.65rem; color:var(--text-dim); white-space:nowrap;
+}
+.copied-msg { display:none; color:var(--cyan); font-family:'Space Mono'; font-size:.72rem; margin-top:8px; }
+
+/* ── FOOTER ── */
+footer {
+  text-align:center; padding:50px 24px 40px;
+  border-top:1px solid var(--border);
+  font-family:'Space Mono'; font-size:.72rem; color:var(--text-dim); line-height:2;
+}
+
+@media(max-width:640px){
+  nav { padding:14px 20px; }
+  .nav-links { display:none; }
+  .donation-box { padding:24px 18px; }
 }
 </style>
 </head>
 <body>
 
-<div class="bg">
-  <div class="bg-grad"></div>
-  <div id="bgCoins"></div>
-</div>
+<canvas id="particles"></canvas>
 
 <!-- NAV -->
 <nav>
-  <a class="logo" href="index.html">
-    <div class="logo-coin">R</div>
-    <div><span class="logo-top">ROXs</span><span class="logo-bot">Swap</span></div>
-  </a>
+  <span class="nav-logo">ROXs</span>
   <div class="nav-links">
-    <a class="nav-a on" href="swap.html">Swap</a>
-    <a class="nav-a" href="index.html">Home</a>
-    <a class="nav-a" href="https://x.com/ROXsCoin" target="_blank">Twitter ↗</a>
-    <a class="nav-a" href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">Contract ↗</a>
+    <a href="#about">About</a>
+    <a href="#features">Features</a>
+    <a href="#tokenomics">Tokenomics</a>
+    <a href="#security">Security</a>
+    <a href="#support">Support</a>
   </div>
-  <div class="nav-r"></div>
 </nav>
 
-<!-- MAIN -->
-<main>
-  <div class="swap-wrap">
-    <div class="swap-head">
-      <div>
-        <div class="swap-title">Swap</div>
-        <div class="swap-sub">Trade ROXs · POL · USDT on Polygon</div>
-      </div>
-    </div>
+<div class="wrap">
 
-    <!-- UNISWAP WIDGET -->
-    <div class="widget-container">
-      <div class="widget-inner">
-        <div class="widget-loading" id="widgetLoading">
-          <div class="spinner"></div>
-          <div class="loading-text">Loading swap widget...</div>
-        </div>
-        <div id="uniswap-widget-container" style="display:none;"></div>
-      </div>
-    </div>
+<!-- HERO -->
+<header>
+  <span class="star-badge">★ BUILT ON POLYGON ★</span>
+  <h1>ROXs Coin</h1>
+  <p class="tagline">Inspired by the star ROXs 42B and the spirit of space exploration. A decentralized token built for the next generation of Web3.</p>
 
-    <div class="powered">
-      Powered by <a href="https://uniswap.org" target="_blank">Uniswap v2</a> · Polygon Network
-    </div>
+  <div class="hero-ctas">
+    <a href="https://app.uniswap.org/swap?outputCurrency=0x94cf8a3041fca3c7b96d71269b3f9d4c4a07d05e&chain=polygon" class="btn btn-primary">💱 Buy Now</a>
+    <a href="https://polygonscan.com/token/0x94cf8a3041fca3c7b96d71269b3f9d4c4a07d05e#code" class="btn btn-outline">🔗 View Contract</a>
+    <a href="https://t.me/ROXsCoinOfficial" class="btn btn-outline">💬 Community</a>
+  </div>
 
-    <!-- INFO CARDS -->
-    <div class="info-row">
-      <div class="info-card">
-        <div class="label">ROXs Price</div>
-        <div class="value gold" id="roxsPrice">$0.000000007158</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Network</div>
-        <div class="value">Polygon</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Buy Fee</div>
-        <div class="value">2%</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Sell Fee</div>
-        <div class="value">4%</div>
-      </div>
+  <div class="socials">
+    <a href="https://x.com/ROXsCoin">𝕏 Twitter</a>
+    <a href="https://www.facebook.com/profile.php?id=61568816753678">Facebook</a>
+    <a href="https://t.me/ROXsCoinOfficial">Telegram</a>
+    <a href="mailto:roxscoinofficial@proton.me">Email</a>
+  </div>
+
+  <div class="hero-glow">
+    <img src="logo.png" alt="ROXs Coin" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <span class="fallback-icon" style="display:none">🪙</span>
+  </div>
+</header>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+  <div class="section-label">01 — About</div>
+  <h2>🚀 What is ROXs Coin?</h2>
+  <p>ROXs Coin is a next-generation decentralized token built on Polygon, combining security, efficiency, and community-driven growth. Named after the young star ROXs 42B, this project embodies the pioneering spirit of space exploration — pushing boundaries, building the future, and reaching beyond what's possible.</p>
+</section>
+
+<div class="divider"></div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">02 — Features</div>
+  <h2>⚙️ Core Features</h2>
+  <div class="grid">
+    <div class="card">
+      <div class="card-icon">🛡️</div>
+      <div class="card-title">Anti-Whale</div>
+      <div class="card-body">Transaction limits prevent any single wallet from dominating the market.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">Anti-Bot</div>
+      <div class="card-body">Built-in mechanisms block snipers and bots from exploiting launch windows.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔁</div>
+      <div class="card-title">Auto Liquidity</div>
+      <div class="card-body">A portion of each transaction automatically reinforces liquidity pools.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <div class="card-title">Transparent</div>
+      <div class="card-body">All tokenomics and contract logic are fully public and verifiable on-chain.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">⏱️</div>
+      <div class="card-title">Cooldown System</div>
+      <div class="card-body">Trading cooldowns ensure fair distribution and reduce market manipulation.</div>
     </div>
   </div>
-</main>
+</section>
+
+<div class="divider"></div>
+
+<!-- TOKENOMICS -->
+<section class="section" id="tokenomics">
+  <div class="section-label">03 — Tokenomics</div>
+  <h2>💰 Token Distribution</h2>
+  <p>A transparent, deflationary structure designed to reward long-term holders and maintain ecosystem health.</p>
+  <div class="tknm-grid">
+    <div class="tknm-item">
+      <div class="tknm-num">420Q</div>
+      <div class="tknm-sub">420,000,000,000,000,000 ROXs<br>(420 Quadrillion)</div>
+      <div class="tknm-label">Total Supply</div>
+    </div>
+    <div class="tknm-item">
+      <div class="tknm-num">2%</div>
+      <div class="tknm-label">Buy Fee</div>
+    </div>
+    <div class="tknm-item">
+      <div class="tknm-num">4%</div>
+      <div class="tknm-label">Sell Fee</div>
+    </div>
+    <div class="tknm-item">
+      <div class="tknm-num">POL</div>
+      <div class="tknm-label">Network</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SECURITY -->
+<section class="section" id="security">
+  <div class="section-label">04 — Security</div>
+  <h2>🔐 Security Guarantees</h2>
+  <p>The ROXs contract is designed with safety-first principles — transparency and trust are non-negotiable.</p>
+  <ul class="security-list">
+    <li>Verified smart contract on PolygonScan</li>
+    <li>No hidden mint functions</li>
+    <li>Anti-bot system active at launch</li>
+    <li>Liquidity locked</li>
+    <li>No ownership exploits</li>
+  </ul>
+</section>
+
+<div class="divider"></div>
+
+<!-- VISION -->
+<section class="section">
+  <div class="section-label">05 — Vision</div>
+  <h2>🌌 Our Vision</h2>
+  <p>ROXs Coin represents more than a token — it's a step toward a decentralized future. Like the star that inspired it, ROXs burns bright at the frontier of what's possible in Web3: a community-owned, community-driven project with real utility and transparent governance.</p>
+</section>
+
+<div class="divider"></div>
+
+<!-- SUPPORT -->
+<section class="section" id="support">
+  <div class="section-label">06 — Support</div>
+  <h2>🚀 Boost the ROXs Ecosystem</h2>
+  <p>Be part of the growth of ROXs Coin. Community support allows us to keep innovating, expanding the project, and building a solid future within Web3. Every contribution strengthens the development, expansion, and evolution of the ecosystem.</p>
+
+  <div class="donation-box">
+    <h3>💰 We Accept</h3>
+    <ul class="accept-list">
+      <li>USDT — Polygon Network</li>
+      <li>POL (MATIC)</li>
+    </ul>
+
+    <div class="addr-label">📍 POLYGON ADDRESS</div>
+    <div class="addr-value" id="addrBox" onclick="copyAddr()">
+      0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E
+    </div>
+    <div class="copied-msg" id="copiedMsg">✓ Address copied</div>
+  </div>
+</section>
+
+</div><!-- /.wrap -->
 
 <!-- FOOTER -->
 <footer>
-  <div class="foot-grid">
-    <div>
-      <div class="fb-logo">
-        <div class="fb-coin">R</div>
-        <div class="fb-name">ROXs <span>Swap</span></div>
-      </div>
-      <div class="fb-copy">2025 ROXs Coin © All Rights Reserved.</div>
-      <div class="socials">
-        <a class="soc" href="https://x.com/ROXsCoin" target="_blank">𝕏</a>
-        <a class="soc" href="#" target="_blank">✈</a>
-        <a class="soc" href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">⬡</a>
-      </div>
-    </div>
-    <div class="foot-cols">
-      <div class="fc">
-        <h4>Ecosystem</h4>
-        <a href="swap.html">Swap</a>
-        <a href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">Contract</a>
-        <a href="https://dex.coinmarketcap.com/token/polygon/0x94cf8a3041fca3c7b96d71269b3f9d4c4a07d05e" target="_blank">DexScan</a>
-      </div>
-      <div class="fc">
-        <h4>Info</h4>
-        <a href="https://x.com/ROXsCoin" target="_blank">Twitter / X</a>
-        <a href="#">Telegram</a>
-        <a href="https://roxscoinofficial.github.io">Website</a>
-      </div>
-    </div>
-  </div>
+  <p>ROXs Coin © 2026</p>
+  <p>Built on Polygon &nbsp;•&nbsp; Powered by Community</p>
+  <p style="margin-top:12px">
+    <a href="https://x.com/ROXsCoin" style="color:var(--cyan);text-decoration:none;margin:0 8px">𝕏</a>
+    <a href="https://t.me/ROXsCoinOfficial" style="color:var(--cyan);text-decoration:none;margin:0 8px">Telegram</a>
+    <a href="mailto:roxscoinofficial@proton.me" style="color:var(--cyan);text-decoration:none;margin:0 8px">Email</a>
+  </p>
 </footer>
 
-<!-- UNISWAP WIDGET SDK -->
-<script type="module">
-import { SwapWidget } from 'https://cdn.jsdelivr.net/npm/@uniswap/widgets@1.85.0/dist/esm/index.js';
-
-const ROXS_CA  = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
-const USDT_CA  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'; // USDT Polygon
-
-const TOKEN_LIST = [
-  {
-    "name": "Polygon",
-    "address": "NATIVE",
-    "symbol": "POL",
-    "decimals": 18,
-    "chainId": 137,
-    "logoURI": "https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png"
-  },
-  {
-    "name": "Tether USD",
-    "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-    "symbol": "USDT",
-    "decimals": 6,
-    "chainId": 137,
-    "logoURI": "https://assets.coingecko.com/coins/images/325/small/Tether.png"
-  },
-  {
-    "name": "ROXs Coin",
-    "address": "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E",
-    "symbol": "ROXs",
-    "decimals": 18,
-    "chainId": 137,
-    "logoURI": "https://roxscoinofficial.github.io/logo.png"
-  },
-  {
-    "name": "USD Coin",
-    "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-    "symbol": "USDC",
-    "decimals": 6,
-    "chainId": 137,
-    "logoURI": "https://assets.coingecko.com/coins/images/6319/small/usdc.png"
-  },
-  {
-    "name": "Wrapped Ether",
-    "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-    "symbol": "WETH",
-    "decimals": 18,
-    "chainId": 137,
-    "logoURI": "https://assets.coingecko.com/coins/images/2518/small/weth.png"
-  }
-];
-
-// Gold theme matching ROXs brand
-const THEME = {
-  primary: '#F5A623',
-  secondary: '#13161f',
-  interactive: '#F5A623',
-  container: '#1c1f2a',
-  module: '#13161f',
-  accent: '#F5A623',
-  outline: 'rgba(255,255,255,0.07)',
-  dialog: '#13161f',
-  fontFamily: 'Nunito, sans-serif',
-  borderRadius: 0.8,
-  tokenColorExtraction: false,
-};
-
-const RPC = {
-  137: 'https://polygon-rpc.com'
-};
-
-async function initWidget() {
-  try {
-    const container = document.getElementById('uniswap-widget-container');
-    const loading   = document.getElementById('widgetLoading');
-
-    const { SwapWidget: Widget } = await import('https://cdn.jsdelivr.net/npm/@uniswap/widgets@1.85.0/dist/esm/index.js');
-
-    // Create widget root element
-    const root = document.createElement('div');
-    container.appendChild(root);
-
-    // Dynamic import of React deps bundled with widget
-    const ReactDOM = await import('https://cdn.jsdelivr.net/npm/react-dom@18/+esm');
-    const React    = await import('https://cdn.jsdelivr.net/npm/react@18/+esm');
-
-    ReactDOM.default.render(
-      React.default.createElement(Widget, {
-        defaultInputTokenAddress: 'NATIVE',   // POL
-        defaultOutputTokenAddress: ROXS_CA,   // ROXs
-        defaultInputAmount: '',
-        tokenList: TOKEN_LIST,
-        theme: THEME,
-        jsonRpcUrlMap: RPC,
-        width: '100%',
-        permit2: true,
-        onConnectWalletClick: () => {},
-      }),
-      root
-    );
-
-    loading.style.display = 'none';
-    container.style.display = 'block';
-
-  } catch(err) {
-    console.error('Widget load error:', err);
-    fallbackMode();
-  }
-}
-
-function fallbackMode() {
-  // Fallback: show iframe of Uniswap
-  const loading   = document.getElementById('widgetLoading');
-  const container = document.getElementById('uniswap-widget-container');
-  const ROXS_CA   = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
-  
-  loading.style.display = 'none';
-  container.style.display = 'block';
-  container.innerHTML = `
-    <iframe
-      src="https://app.uniswap.org/swap?inputCurrency=NATIVE&outputCurrency=${ROXS_CA}&chain=polygon&use=v2&theme=dark"
-      height="500"
-      width="100%"
-      style="border:none;border-radius:20px;display:block;"
-      title="ROXs Swap"
-      allow="clipboard-write"
-    ></iframe>
-  `;
-}
-
-initWidget();
-</script>
-
 <script>
-// Floating coin background
-(() => {
-  const bg = document.getElementById('bgCoins');
-  const cfg = [
-    {s:70, left:'7%',  top:'40%', dur:6},
-    {s:52, left:'3%',  top:'72%', dur:8},
-    {s:80, right:'8%', top:'22%', dur:7},
-    {s:55, right:'5%', top:'62%', dur:9},
-    {s:44, right:'16%',top:'82%', dur:5},
-  ];
-  cfg.forEach(c => {
-    const w = document.createElement('div');
-    w.className = 'coin-wrap';
-    w.style.cssText = (c.left?'left:'+c.left+';':'')+(c.right?'right:'+c.right+';':'')+'top:'+c.top+';animation-duration:'+c.dur+'s;animation-delay:'+(Math.random()*3).toFixed(1)+'s;';
-    const o = document.createElement('div');
-    o.className = 'coin-obj';
-    o.style.cssText = 'width:'+c.s+'px;height:'+c.s+'px;font-size:'+(c.s*0.38)+'px;color:#1a0e00;background:radial-gradient(circle at 35% 35%,#F5A623,#9a5500);box-shadow:0 8px 30px rgba(0,0,0,0.5);';
-    o.textContent = 'R';
-    w.appendChild(o); bg.appendChild(w);
+/* ── PARTICLES ── */
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let W, H, pts = [];
+
+function resize(){
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function rand(a,b){ return a + Math.random()*(b-a); }
+
+for(let i=0;i<120;i++){
+  pts.push({
+    x:rand(0,1), y:rand(0,1),
+    vx:rand(-.0002,.0002), vy:rand(-.0002,.0002),
+    r:rand(.5,2), a:rand(.2,.8)
   });
-})();
+}
 
-// Fetch live ROXs price from CoinGecko
-(async () => {
-  try {
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?contract_addresses=0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E&vs_currencies=usd');
-    const d = await r.json();
-    const addr = '0x94cf8a3041fca3c7b96d71269b3f9d4c4a07d05e';
-    if (d[addr] && d[addr].usd) {
-      const p = d[addr].usd;
-      document.getElementById('roxsPrice').textContent = '$' + p.toFixed(12).replace(/\.?0+$/, '');
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  for(let p of pts){
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<0) p.x=1; if(p.x>1) p.x=0;
+    if(p.y<0) p.y=1; if(p.y>1) p.y=0;
+    ctx.beginPath();
+    ctx.arc(p.x*W, p.y*H, p.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(0,240,255,${p.a})`;
+    ctx.fill();
+  }
+  for(let i=0;i<pts.length;i++){
+    for(let j=i+1;j<pts.length;j++){
+      const dx=(pts[i].x-pts[j].x)*W, dy=(pts[i].y-pts[j].y)*H;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){
+        ctx.beginPath();
+        ctx.moveTo(pts[i].x*W, pts[i].y*H);
+        ctx.lineTo(pts[j].x*W, pts[j].y*H);
+        ctx.strokeStyle=`rgba(0,240,255,${.12*(1-d/120)})`;
+        ctx.stroke();
+      }
     }
-  } catch(e) {}
-})();
-</script>
+  }
+  requestAnimationFrame(draw);
+}
+draw();
 
+/* ── COPY ADDRESS ── */
+function copyAddr(){
+  const addr = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
+  navigator.clipboard.writeText(addr).then(()=>{
+    const msg = document.getElementById('copiedMsg');
+    msg.style.display='block';
+    setTimeout(()=>{ msg.style.display='none'; }, 2500);
+  });
+}
+
+/* ── SCROLL FADE-IN ── */
+const obs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+    }
+  });
+},{threshold:.15});
+
+document.querySelectorAll('.section,.card,.tknm-item').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(24px)';
+  el.style.transition='opacity .6s ease, transform .6s ease';
+  obs.observe(el);
+});
+</script>
 </body>
 </html>
+
 
 
 
