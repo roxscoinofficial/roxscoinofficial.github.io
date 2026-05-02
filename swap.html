@@ -1,411 +1,781 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ROXs Swap</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --gold:#F5A623;--gold2:#e8920a;--bg:#0a0e1a;--card:#13161f;--card2:#1c1f2a;
-  --border:rgba(255,255,255,0.07);--text:#fff;--muted:#6b7280;--green:#22c55e;
-}
-body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROXs Swap</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #13111a;
+            --surface: #1c1a26;
+            --surface2: #252233;
+            --surface3: #2e2b3e;
+            --pink: #fc72ff;
+            --pink-dim: rgba(252,114,255,0.15);
+            --blue: #4c82fb;
+            --text: #ffffff;
+            --text2: #9b9ab0;
+            --text3: #6b6a80;
+            --border: rgba(255,255,255,0.06);
+            --border-hover: rgba(255,255,255,0.12);
+            --green: #40b66b;
+            --red: #fd766b;
+        }
 
-/* BACKGROUND */
-.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
-.bg-grad{position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse at 12% 50%,rgba(245,166,35,0.13) 0%,transparent 48%),
-    radial-gradient(ellipse at 88% 28%,rgba(30,60,200,0.11) 0%,transparent 48%);}
-.coin-wrap{position:absolute;animation:floatCoin ease-in-out infinite;}
-.coin-obj{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;}
-@keyframes floatCoin{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-22px) rotate(8deg);}}
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-/* NAV */
-nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;
-  padding:15px 40px;border-bottom:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(10px);}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
-.logo-coin{width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,#F5A623,#C8720A);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:19px;color:#1a0e00;
-  box-shadow:0 0 20px rgba(245,166,35,0.45);}
-.logo-top{display:block;font-size:17px;font-weight:900;color:#fff;letter-spacing:1px;}
-.logo-bot{display:block;font-size:12px;font-weight:700;color:var(--gold);}
-.nav-links{display:flex;gap:2px;}
-.nav-a{padding:8px 14px;border-radius:8px;font-size:14px;font-weight:700;
-  color:rgba(255,255,255,0.6);text-decoration:none;transition:all .2s;
-  background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;}
-.nav-a:hover,.nav-a.on{color:#fff;background:rgba(255,255,255,0.07);}
-.nav-r{display:flex;align-items:center;gap:8px;}
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-/* MAIN */
-main{position:relative;z-index:5;display:flex;flex-direction:column;
-  align-items:center;padding:50px 16px 60px;}
-.swap-wrap{width:100%;max-width:480px;}
-.swap-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.swap-title{font-size:28px;font-weight:900;}
-.swap-sub{font-size:13px;color:var(--muted);margin-top:4px;}
+        /* NAV */
+        nav {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            position: relative;
+            z-index: 10;
+        }
 
-/* UNISWAP WIDGET CONTAINER */
-.widget-container{
-  width:100%;
-  background:var(--card);
-  border:1px solid rgba(255,255,255,0.06);
-  border-radius:20px;
-  overflow:hidden;
-  box-shadow:0 24px 60px rgba(0,0,0,0.5);
-  min-height:360px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-}
-.widget-inner{
-  width:100%;
-  padding:0;
-}
+        .nav-left { display: flex; align-items: center; gap: 24px; }
 
-/* Uniswap widget override styles */
-#uniswap-widget-container {
-  width: 100% !important;
-}
-#uniswap-widget-container > div {
-  width: 100% !important;
-  max-width: 100% !important;
-  border-radius: 20px !important;
-  border: none !important;
-  box-shadow: none !important;
-}
+        .nav-logo {
+            display: flex; align-items: center; gap: 8px;
+            font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text);
+        }
 
-/* POWERED */
-.powered{text-align:center;font-size:12px;font-weight:600;
-  color:rgba(255,255,255,0.18);margin-top:12px;}
-.powered a{color:rgba(245,166,35,0.5);text-decoration:none;}
-.powered a:hover{color:var(--gold);}
+        .logo-icon {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--pink), var(--blue));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 900; color: #000;
+        }
 
-/* INFO CARDS */
-.info-row{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;}
-.info-card{flex:1;min-width:120px;background:var(--card);border:1px solid rgba(255,255,255,0.06);
-  border-radius:14px;padding:14px 16px;}
-.info-card .label{font-size:12px;color:var(--muted);margin-bottom:6px;}
-.info-card .value{font-size:16px;font-weight:800;color:#fff;}
-.info-card .value.gold{color:var(--gold);}
+        .nav-links { display: flex; gap: 4px; }
+        .nav-link {
+            padding: 8px 12px; border-radius: 14px; font-size: 0.875rem;
+            font-weight: 500; color: var(--text2); text-decoration: none;
+            transition: 0.15s; cursor: pointer;
+        }
+        .nav-link:hover, .nav-link.active { background: var(--surface2); color: var(--text); }
 
-/* FOOTER */
-footer{position:relative;z-index:5;background:rgba(0,0,0,0.5);
-  border-top:1px solid rgba(255,255,255,0.04);padding:40px 60px 28px;}
-.foot-grid{display:flex;justify-content:space-between;align-items:flex-start;
-  margin-bottom:28px;flex-wrap:wrap;gap:30px;}
-.fb-logo{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.fb-coin{width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,#F5A623,#C8720A);
-  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#1a0e00;}
-.fb-name{font-size:19px;font-weight:900;}
-.fb-name span{color:var(--gold);}
-.fb-copy{font-size:13px;color:var(--muted);}
-.foot-cols{display:flex;gap:60px;}
-.fc h4{font-size:13px;font-weight:800;color:rgba(255,255,255,0.4);
-  margin-bottom:14px;letter-spacing:.5px;text-transform:uppercase;}
-.fc a{display:block;font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);
-  text-decoration:none;margin-bottom:9px;transition:color .2s;}
-.fc a:hover{color:#fff;}
-.socials{display:flex;gap:12px;margin-top:20px;}
-.soc{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.06);
-  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:15px;color:rgba(255,255,255,0.5);text-decoration:none;transition:all .2s;}
-.soc:hover{background:rgba(255,255,255,0.12);color:#fff;}
+        .nav-right { display: flex; align-items: center; gap: 8px; }
 
-/* LOADING STATE */
-.widget-loading{display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:50px 20px;gap:14px;}
-.spinner{width:36px;height:36px;border:3px solid rgba(245,166,35,0.2);
-  border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.loading-text{font-size:14px;color:var(--muted);font-weight:600;}
+        .price-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 20px; padding: 6px 12px;
+            font-size: 0.75rem; font-weight: 600; color: var(--text2);
+        }
+        .price-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
 
-@media(max-width:600px){
-  nav{padding:14px 16px;}
-  .nav-links{display:none;}
-  footer{padding:30px 20px 24px;}
-  .foot-cols{gap:30px;}
-  .foot-grid{flex-direction:column;}
-}
-</style>
+        .btn-network {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 20px; padding: 6px 12px;
+            font-size: 0.75rem; font-weight: 600; color: var(--text);
+            cursor: pointer; transition: 0.15s;
+        }
+        .btn-network:hover { border-color: var(--border-hover); }
+
+        .btn-connect {
+            background: var(--pink-dim); border: 1px solid rgba(252,114,255,0.3);
+            border-radius: 20px; padding: 8px 16px;
+            color: var(--pink); font-size: 0.875rem; font-weight: 600;
+            cursor: pointer; transition: 0.15s;
+        }
+        .btn-connect:hover { background: rgba(252,114,255,0.25); }
+        .btn-connect.connected { background: var(--surface2); border-color: var(--border); color: var(--text); }
+
+        /* TABS */
+        main {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; padding: 24px 16px;
+            width: 100%;
+        }
+
+        .swap-wrapper { width: 100%; max-width: 464px; }
+
+        .tabs-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px; padding: 0 4px;
+        }
+
+        .tabs { display: flex; gap: 4px; }
+        .tab {
+            padding: 8px 14px; border-radius: 14px; font-size: 0.875rem;
+            font-weight: 600; cursor: pointer; transition: 0.15s;
+            color: var(--text2); border: none; background: none;
+        }
+        .tab:hover { color: var(--text); }
+        .tab.active { background: var(--surface2); color: var(--text); }
+
+        .header-actions { display: flex; gap: 4px; }
+        .icon-btn {
+            width: 36px; height: 36px; border-radius: 12px;
+            background: var(--surface2); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.15s; color: var(--text2);
+        }
+        .icon-btn:hover { border-color: var(--border-hover); color: var(--text); }
+
+        /* SWAP CARD */
+        .swap-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 4px;
+        }
+
+        /* INPUT PANELS */
+        .panel {
+            background: var(--surface2);
+            border-radius: 20px;
+            padding: 16px;
+            position: relative;
+            transition: 0.15s;
+        }
+        .panel:hover { background: var(--surface3); }
+
+        .panel-label {
+            font-size: 0.875rem; font-weight: 500; color: var(--text2);
+            margin-bottom: 8px;
+        }
+
+        .panel-row { display: flex; align-items: center; gap: 12px; }
+
+        .amount-input {
+            flex: 1; background: none; border: none; outline: none;
+            font-size: 2rem; font-weight: 400; color: var(--text);
+            font-family: inherit; min-width: 0;
+        }
+        .amount-input::placeholder { color: var(--text3); }
+        .amount-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+        /* TOKEN SELECTOR */
+        .token-selector {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 20px; padding: 6px 10px 6px 6px;
+            cursor: pointer; transition: 0.2s; white-space: nowrap;
+            user-select: none;
+        }
+        .token-selector:hover { border-color: var(--border-hover); background: var(--surface3); }
+
+        .token-icon-wrap {
+            width: 28px; height: 28px; border-radius: 50%;
+            overflow: hidden; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .token-icon-wrap svg, .token-icon-wrap img { width: 100%; height: 100%; }
+
+        .token-name { font-size: 0.9375rem; font-weight: 700; color: var(--text); }
+        .chevron { color: var(--text2); font-size: 10px; margin-left: 2px; }
+
+        .panel-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 8px;
+        }
+        .usd-value { font-size: 0.8125rem; color: var(--text2); font-weight: 400; }
+        .balance-row { display: flex; align-items: center; gap: 6px; }
+        .balance-text { font-size: 0.8125rem; color: var(--text2); }
+
+        .pct-buttons { display: flex; gap: 4px; }
+        .pct-btn {
+            padding: 3px 8px; border-radius: 8px; font-size: 0.6875rem;
+            font-weight: 700; cursor: pointer; transition: 0.15s;
+            background: var(--surface3); border: 1px solid var(--border);
+            color: var(--text2);
+        }
+        .pct-btn:hover { background: var(--pink-dim); color: var(--pink); border-color: rgba(252,114,255,0.3); }
+        .pct-btn.max { color: var(--pink); border-color: rgba(252,114,255,0.3); background: var(--pink-dim); }
+        .pct-btn.max:hover { background: rgba(252,114,255,0.25); }
+
+        /* DIVIDER */
+        .swap-divider {
+            height: 0; position: relative;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2; margin: 4px 0;
+        }
+        .arrow-circle {
+            width: 40px; height: 40px;
+            background: var(--surface2);
+            border: 4px solid var(--surface);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; color: var(--text2);
+        }
+        .arrow-circle:hover {
+            background: var(--surface3); color: var(--text);
+            transform: rotate(180deg);
+        }
+
+        /* RATE INFO */
+        .rate-info {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; margin-top: 4px;
+            font-size: 0.8125rem;
+        }
+        .rate-label { color: var(--text2); }
+        .rate-value { color: var(--text); font-weight: 500; display: flex; align-items: center; gap: 4px; }
+        .rate-toggle { cursor: pointer; color: var(--text3); transition: 0.15s; font-size: 11px; }
+        .rate-toggle:hover { color: var(--text2); }
+
+        /* SWAP DETAILS */
+        .swap-details {
+            background: var(--surface2); border-radius: 16px;
+            padding: 12px 16px; margin: 4px 0;
+            display: none;
+        }
+        .swap-details.visible { display: block; }
+        .detail-row {
+            display: flex; justify-content: space-between;
+            font-size: 0.8125rem; padding: 4px 0;
+        }
+        .detail-label { color: var(--text2); }
+        .detail-value { color: var(--text); font-weight: 500; }
+        .detail-value.highlight { color: var(--pink); }
+
+        /* MAIN BUTTON */
+        .btn-action {
+            width: 100%; margin-top: 4px;
+            padding: 16px; border-radius: 20px;
+            border: none; font-family: inherit;
+            font-weight: 700; font-size: 1.0625rem;
+            cursor: pointer; transition: 0.2s;
+            background: var(--surface3); color: var(--text3);
+        }
+        .btn-action.active {
+            background: linear-gradient(135deg, var(--pink), #a855f7);
+            color: #fff;
+        }
+        .btn-action.active:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-action.connect {
+            background: var(--pink-dim); color: var(--pink);
+            border: 1px solid rgba(252,114,255,0.3);
+        }
+        .btn-action.connect:hover { background: rgba(252,114,255,0.25); transform: translateY(-1px); }
+
+        /* POWERED BY */
+        .powered {
+            text-align: center; margin-top: 16px;
+            font-size: 0.75rem; color: var(--text3);
+        }
+
+        /* WARNING */
+        .price-warning {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(253,118,107,0.1); border: 1px solid rgba(253,118,107,0.25);
+            border-radius: 16px; padding: 10px 14px;
+            font-size: 0.8125rem; color: var(--red);
+            margin-top: 4px; display: none;
+        }
+        .price-warning.visible { display: flex; }
+
+        /* TOKEN DROPDOWN */
+        .dropdown-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            display: none; align-items: flex-end; justify-content: center;
+        }
+        .dropdown-overlay.visible { display: flex; }
+
+        .token-modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            width: 100%; max-width: 464px;
+            animation: slideUp 0.2s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .modal-title { font-size: 1rem; font-weight: 700; }
+        .modal-close { background: var(--surface2); border: none; color: var(--text2); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 1rem; transition: 0.15s; }
+        .modal-close:hover { color: var(--text); }
+
+        .token-search {
+            width: 100%; background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 16px; padding: 12px 16px; color: var(--text);
+            font-family: inherit; font-size: 0.9375rem; outline: none; margin-bottom: 16px;
+            transition: 0.15s;
+        }
+        .token-search:focus { border-color: var(--pink); }
+        .token-search::placeholder { color: var(--text3); }
+
+        .token-list { display: flex; flex-direction: column; gap: 2px; }
+        .token-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; border-radius: 16px; cursor: pointer; transition: 0.15s;
+        }
+        .token-item:hover { background: var(--surface2); }
+        .token-item-icon { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+        .token-item-icon svg { width: 100%; height: 100%; }
+        .token-item-info { flex: 1; }
+        .token-item-name { font-size: 0.9375rem; font-weight: 600; }
+        .token-item-full { font-size: 0.75rem; color: var(--text2); margin-top: 1px; }
+        .token-item-bal { font-size: 0.875rem; color: var(--text2); text-align: right; }
+
+        /* NETWORK POLYGON */
+        .poly-icon { display: flex; align-items: center; justify-content: center; }
+    </style>
 </head>
 <body>
 
-<div class="bg">
-  <div class="bg-grad"></div>
-  <div id="bgCoins"></div>
-</div>
-
 <!-- NAV -->
 <nav>
-  <a class="logo" href="index.html">
-    <div class="logo-coin">R</div>
-    <div><span class="logo-top">ROXs</span><span class="logo-bot">Swap</span></div>
-  </a>
-  <div class="nav-links">
-    <a class="nav-a on" href="swap.html">Swap</a>
-    <a class="nav-a" href="index.html">Home</a>
-    <a class="nav-a" href="https://x.com/ROXsCoin" target="_blank">Twitter ↗</a>
-    <a class="nav-a" href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">Contract ↗</a>
-  </div>
-  <div class="nav-r"></div>
+    <div class="nav-left">
+        <a href="#" class="nav-logo">
+            <div class="logo-icon">R</div>
+            ROXs
+        </a>
+        <div class="nav-links">
+            <span class="nav-link active">Swap</span>
+            <span class="nav-link">Explorar</span>
+            <span class="nav-link">Pool</span>
+        </div>
+    </div>
+    <div class="nav-right">
+        <div class="price-badge">
+            <div class="price-dot"></div>
+            ~12.69M ROXs/POL
+        </div>
+        <button class="btn-network" id="networkBtn">
+            <!-- Polygon icon SVG inline -->
+            <svg width="16" height="16" viewBox="0 0 38 38" fill="none">
+                <circle cx="19" cy="19" r="19" fill="#8247E5"/>
+                <path d="M24.5 14.5L19 11.5L13.5 14.5V20.5L19 23.5L24.5 20.5V14.5Z" fill="white" opacity="0.9"/>
+                <path d="M19 23.5L13.5 20.5V26.5L19 29.5L24.5 26.5V20.5L19 23.5Z" fill="white" opacity="0.6"/>
+            </svg>
+            Polygon
+        </button>
+        <button class="btn-connect" id="connectBtn">Conectar</button>
+    </div>
 </nav>
 
-<!-- MAIN -->
 <main>
-  <div class="swap-wrap">
-    <div class="swap-head">
-      <div>
-        <div class="swap-title">Swap</div>
-        <div class="swap-sub">Trade ROXs · POL · USDT on Polygon</div>
-      </div>
-    </div>
+<div class="swap-wrapper">
 
-    <!-- UNISWAP WIDGET -->
-    <div class="widget-container">
-      <div class="widget-inner">
-        <div class="widget-loading" id="widgetLoading">
-          <div class="spinner"></div>
-          <div class="loading-text">Loading swap widget...</div>
+    <!-- Tabs -->
+    <div class="tabs-header">
+        <div class="tabs">
+            <button class="tab active">Intercambio</button>
+            <button class="tab">Límite</button>
+            <button class="tab">Comprar</button>
+            <button class="tab">Vender</button>
         </div>
-        <div id="uniswap-widget-container" style="display:none;"></div>
-      </div>
+        <div class="header-actions">
+            <div class="icon-btn" title="Actualizar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+            </div>
+            <div class="icon-btn" id="settingsBtn" title="Configuración">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </div>
+        </div>
     </div>
 
-    <div class="powered">
-      Powered by <a href="https://uniswap.org" target="_blank">Uniswap v2</a> · Polygon Network
+    <!-- Swap Card -->
+    <div class="swap-card">
+
+        <!-- SELL PANEL -->
+        <div class="panel" id="sellPanel">
+            <div class="panel-label">Vender</div>
+            <div class="panel-row">
+                <input type="text" id="inputAmount" class="amount-input" placeholder="0" inputmode="decimal" autocomplete="off">
+                <div class="token-selector" id="sellTokenBtn">
+                    <div class="token-icon-wrap" id="sellIconWrap"></div>
+                    <span class="token-name" id="sellTokenName">USDT</span>
+                    <span class="chevron">▼</span>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <span class="usd-value" id="sellUsd">$0.00</span>
+                <div class="balance-row">
+                    <span class="balance-text">Balance: <span id="sellBalance">0.0000</span></span>
+                    <div class="pct-buttons">
+                        <button class="pct-btn" onclick="setPct(25)">25%</button>
+                        <button class="pct-btn" onclick="setPct(50)">50%</button>
+                        <button class="pct-btn" onclick="setPct(75)">75%</button>
+                        <button class="pct-btn max" onclick="setPct(100)">MAX</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIVIDER -->
+        <div class="swap-divider">
+            <div class="arrow-circle" id="swapDirectionBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <polyline points="19 12 12 19 5 12"></polyline>
+                </svg>
+            </div>
+        </div>
+
+        <!-- BUY PANEL -->
+        <div class="panel" id="buyPanel">
+            <div class="panel-label">Comprar</div>
+            <div class="panel-row">
+                <input type="text" id="outputAmount" class="amount-input" placeholder="0" readonly style="color: var(--text2);">
+                <div class="token-selector" id="buyTokenBtn">
+                    <div class="token-icon-wrap" id="buyIconWrap"></div>
+                    <span class="token-name" id="buyTokenName">ROXs</span>
+                    <span class="chevron">▼</span>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <span class="usd-value" id="buyUsd">$0.00</span>
+                <span class="balance-text">Balance: <span id="buyBalance">0</span></span>
+            </div>
+        </div>
+
+        <!-- RATE INFO -->
+        <div class="rate-info" id="rateInfo" style="display:none;">
+            <span class="rate-label">Precio</span>
+            <span class="rate-value">
+                <span id="rateText">1 USDT = 51.108M ROXs</span>
+                <span class="rate-toggle" id="rateToggle">⇄</span>
+            </span>
+        </div>
+
+        <!-- DETAILS -->
+        <div class="swap-details" id="swapDetails">
+            <div class="detail-row">
+                <span class="detail-label">Impacto en precio</span>
+                <span class="detail-value highlight">~-1.5%</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Mínimo recibido</span>
+                <span class="detail-value" id="minReceived">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Ruta</span>
+                <span class="detail-value" id="routeText">—</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Fee de red</span>
+                <span class="detail-value">~$0.01</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Order routing</span>
+                <span class="detail-value">Uniswap v2</span>
+            </div>
+        </div>
+
+        <!-- WARNING -->
+        <div class="price-warning" id="priceWarning">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            Gran diferencia de precio (62.28%)
+        </div>
+
+        <!-- ACTION BUTTON -->
+        <button class="btn-action connect" id="actionBtn">Conectar billetera</button>
+
     </div>
 
-    <!-- INFO CARDS -->
-    <div class="info-row">
-      <div class="info-card">
-        <div class="label">ROXs Price</div>
-        <div class="value gold" id="roxsPrice">$0.000000007158</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Network</div>
-        <div class="value">Polygon</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Buy Fee</div>
-        <div class="value">2%</div>
-      </div>
-      <div class="info-card">
-        <div class="label">Sell Fee</div>
-        <div class="value">4%</div>
-      </div>
-    </div>
-  </div>
+    <div class="powered">Powered by Uniswap v2 · Polygon Network</div>
+
+</div>
 </main>
 
-<!-- FOOTER -->
-<footer>
-  <div class="foot-grid">
-    <div>
-      <div class="fb-logo">
-        <div class="fb-coin">R</div>
-        <div class="fb-name">ROXs <span>Swap</span></div>
-      </div>
-      <div class="fb-copy">2025 ROXs Coin © All Rights Reserved.</div>
-      <div class="socials">
-        <a class="soc" href="https://x.com/ROXsCoin" target="_blank">𝕏</a>
-        <a class="soc" href="#" target="_blank">✈</a>
-        <a class="soc" href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">⬡</a>
-      </div>
+<!-- TOKEN DROPDOWN -->
+<div class="dropdown-overlay" id="dropdownOverlay">
+    <div class="token-modal">
+        <div class="modal-header">
+            <span class="modal-title">Seleccionar token</span>
+            <button class="modal-close" id="closeDropdown">✕</button>
+        </div>
+        <input type="text" class="token-search" placeholder="Buscar nombre o pegar dirección" id="tokenSearch">
+        <div class="token-list" id="tokenList"></div>
     </div>
-    <div class="foot-cols">
-      <div class="fc">
-        <h4>Ecosystem</h4>
-        <a href="swap.html">Swap</a>
-        <a href="https://polygonscan.com/token/0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E" target="_blank">Contract</a>
-        <a href="https://dex.coinmarketcap.com/token/polygon/0x94cf8a3041fca3c7b96d71269b3f9d4c4a07d05e" target="_blank">DexScan</a>
-      </div>
-      <div class="fc">
-        <h4>Info</h4>
-        <a href="https://x.com/ROXsCoin" target="_blank">Twitter / X</a>
-        <a href="#">Telegram</a>
-        <a href="https://roxscoinofficial.github.io">Website</a>
-      </div>
-    </div>
-  </div>
-</footer>
-
-<!-- UNISWAP WIDGET SDK -->
-<script type="module">
-import { SwapWidget } from 'https://cdn.jsdelivr.net/npm/@uniswap/widgets@1.85.0/dist/esm/index.js';
-
-const ROXS_CA  = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
-const USDT_CA  = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F'; // USDT Polygon
-
-const TOKEN_LIST = [
-  {
-    "name": "Polygon",
-    "address": "NATIVE",
-    "symbol": "POL",
-    "decimals": 18,
-    "chainId": 137,
-    "logoURI": "https://assets.coingecko.com/coins/images/4713/small/matic-token-icon.png"
-  },
-  {
-    "name": "Tether USD",
-    "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-    "symbol": "USDT",
-    "decimals": 6,
-    "chainId": 137,
-    "logoURI": "https://assets.coingecko.com/coins/images/325/small/Tether.png"
-  },
-  {
-    "name": "ROXs Coin",
-    "address": "0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E",
-    "symbol": "ROXs",
-    "decimals": 18,
-    "chainId": 137,
-    "logoURI": "https://roxscoinofficial.github.io/logo.png"
-  },
-  {
-    "name": "USD Coin",
-    "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-    "symbol": "USDC",
-    "decimals": 6,
-    "chainId": 137,
-    "logoURI": "https://assets.coingecko.com/coins/images/6319/small/usdc.png"
-  },
-  {
-    "name": "Wrapped Ether",
-    "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-    "symbol": "WETH",
-    "decimals": 18,
-    "chainId": 137,
-    "logoURI": "https://assets.coingecko.com/coins/images/2518/small/weth.png"
-  }
-];
-
-// Gold theme matching ROXs brand
-const THEME = {
-  primary: '#F5A623',
-  secondary: '#13161f',
-  interactive: '#F5A623',
-  container: '#1c1f2a',
-  module: '#13161f',
-  accent: '#F5A623',
-  outline: 'rgba(255,255,255,0.07)',
-  dialog: '#13161f',
-  fontFamily: 'Nunito, sans-serif',
-  borderRadius: 0.8,
-  tokenColorExtraction: false,
-};
-
-const RPC = {
-  137: 'https://polygon-rpc.com'
-};
-
-async function initWidget() {
-  try {
-    const container = document.getElementById('uniswap-widget-container');
-    const loading   = document.getElementById('widgetLoading');
-
-    const { SwapWidget: Widget } = await import('https://cdn.jsdelivr.net/npm/@uniswap/widgets@1.85.0/dist/esm/index.js');
-
-    // Create widget root element
-    const root = document.createElement('div');
-    container.appendChild(root);
-
-    // Dynamic import of React deps bundled with widget
-    const ReactDOM = await import('https://cdn.jsdelivr.net/npm/react-dom@18/+esm');
-    const React    = await import('https://cdn.jsdelivr.net/npm/react@18/+esm');
-
-    ReactDOM.default.render(
-      React.default.createElement(Widget, {
-        defaultInputTokenAddress: 'NATIVE',   // POL
-        defaultOutputTokenAddress: ROXS_CA,   // ROXs
-        defaultInputAmount: '',
-        tokenList: TOKEN_LIST,
-        theme: THEME,
-        jsonRpcUrlMap: RPC,
-        width: '100%',
-        permit2: true,
-        onConnectWalletClick: () => {},
-      }),
-      root
-    );
-
-    loading.style.display = 'none';
-    container.style.display = 'block';
-
-  } catch(err) {
-    console.error('Widget load error:', err);
-    fallbackMode();
-  }
-}
-
-function fallbackMode() {
-  // Fallback: show iframe of Uniswap
-  const loading   = document.getElementById('widgetLoading');
-  const container = document.getElementById('uniswap-widget-container');
-  const ROXS_CA   = '0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E';
-  
-  loading.style.display = 'none';
-  container.style.display = 'block';
-  container.innerHTML = `
-    <iframe
-      src="https://app.uniswap.org/swap?inputCurrency=NATIVE&outputCurrency=${ROXS_CA}&chain=polygon&use=v2&theme=dark"
-      height="500"
-      width="100%"
-      style="border:none;border-radius:20px;display:block;"
-      title="ROXs Swap"
-      allow="clipboard-write"
-    ></iframe>
-  `;
-}
-
-initWidget();
-</script>
+</div>
 
 <script>
-// Floating coin background
-(() => {
-  const bg = document.getElementById('bgCoins');
-  const cfg = [
-    {s:70, left:'7%',  top:'40%', dur:6},
-    {s:52, left:'3%',  top:'72%', dur:8},
-    {s:80, right:'8%', top:'22%', dur:7},
-    {s:55, right:'5%', top:'62%', dur:9},
-    {s:44, right:'16%',top:'82%', dur:5},
-  ];
-  cfg.forEach(c => {
-    const w = document.createElement('div');
-    w.className = 'coin-wrap';
-    w.style.cssText = (c.left?'left:'+c.left+';':'')+(c.right?'right:'+c.right+';':'')+'top:'+c.top+';animation-duration:'+c.dur+'s;animation-delay:'+(Math.random()*3).toFixed(1)+'s;';
-    const o = document.createElement('div');
-    o.className = 'coin-obj';
-    o.style.cssText = 'width:'+c.s+'px;height:'+c.s+'px;font-size:'+(c.s*0.38)+'px;color:#1a0e00;background:radial-gradient(circle at 35% 35%,#F5A623,#9a5500);box-shadow:0 8px 30px rgba(0,0,0,0.5);';
-    o.textContent = 'R';
-    w.appendChild(o); bg.appendChild(w);
-  });
-})();
+// ─── SVG ICONS ───────────────────────────────────────────────────
+const ICONS = {
+    USDT: `<svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="19" r="19" fill="#26A17B"/>
+        <text x="19" y="24" font-size="16" font-weight="900" text-anchor="middle" fill="white" font-family="Arial">₮</text>
+    </svg>`,
 
-// Fetch live ROXs price from CoinGecko
-(async () => {
-  try {
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/token_price/polygon-pos?contract_addresses=0x94Cf8A3041FCA3c7B96D71269B3F9d4c4A07D05E&vs_currencies=usd');
-    const d = await r.json();
-    const addr = '0x94cf8a3041fca3c7b96d71269b3f9d4c4a07d05e';
-    if (d[addr] && d[addr].usd) {
-      const p = d[addr].usd;
-      document.getElementById('roxsPrice').textContent = '$' + p.toFixed(12).replace(/\.?0+$/, '');
+    POL: `<svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="19" r="19" fill="#8247E5"/>
+        <path d="M24.8 14.2L19 11 13.2 14.2v6.6l5.8 3.2 5.8-3.2V14.2z" fill="white" opacity="0.95"/>
+        <path d="M19 24l-5.8-3.2v4.8L19 29l5.8-3.4v-4.8L19 24z" fill="white" opacity="0.6"/>
+    </svg>`,
+
+    ROXs: `<svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="roxsG" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#fc72ff"/>
+                <stop offset="100%" stop-color="#a855f7"/>
+            </linearGradient>
+        </defs>
+        <circle cx="19" cy="19" r="19" fill="url(#roxsG)"/>
+        <text x="19" y="25" font-size="13" font-weight="900" text-anchor="middle" fill="white" font-family="Arial">RX</text>
+    </svg>`,
+
+    WETH: `<svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="19" r="19" fill="#627EEA"/>
+        <path d="M19 7v9.3l7.9 3.5L19 7z" fill="white" opacity="0.6"/>
+        <path d="M19 7L11.1 19.8l7.9-3.5V7z" fill="white"/>
+        <path d="M19 25.9v5.1l7.9-10.9L19 25.9z" fill="white" opacity="0.6"/>
+        <path d="M19 31v-5.1l-7.9-5.8L19 31z" fill="white"/>
+        <path d="M19 24.5l7.9-4.6-7.9-3.5v8.1z" fill="white" opacity="0.2"/>
+        <path d="M11.1 19.9l7.9 4.6v-8.1l-7.9 3.5z" fill="white" opacity="0.6"/>
+    </svg>`,
+
+    USDC: `<svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="19" cy="19" r="19" fill="#2775CA"/>
+        <text x="19" y="25" font-size="16" font-weight="900" text-anchor="middle" fill="white" font-family="Arial">$</text>
+    </svg>`
+};
+
+// ─── TOKEN DATA ───────────────────────────────────────────────────
+const TOKENS = [
+    { sym: 'USDT', name: 'Tether USD', bal: '0.0000' },
+    { sym: 'POL',  name: 'Polygon',    bal: '0.00'   },
+    { sym: 'ROXs', name: 'ROXs Token', bal: '0'      },
+    { sym: 'WETH', name: 'Wrapped ETH', bal: '0.0000'},
+    { sym: 'USDC', name: 'USD Coin',   bal: '0.0000' },
+];
+
+const RATES = {
+    'USDT-ROXs': 51108300,
+    'POL-ROXs':  12500000,
+    'WETH-ROXs': 95000000,
+    'USDC-ROXs': 51108300,
+    'ROXs-USDT': 1/51108300,
+    'ROXs-POL':  1/12500000,
+};
+
+// ─── STATE ────────────────────────────────────────────────────────
+let sellToken = 'USDT';
+let buyToken  = 'ROXs';
+let selectingFor = null;
+let walletConnected = false;
+
+// ─── DOM REFS ─────────────────────────────────────────────────────
+const inputAmount  = document.getElementById('inputAmount');
+const outputAmount = document.getElementById('outputAmount');
+const actionBtn    = document.getElementById('actionBtn');
+const sellIconWrap = document.getElementById('sellIconWrap');
+const buyIconWrap  = document.getElementById('buyIconWrap');
+const sellTokenName= document.getElementById('sellTokenName');
+const buyTokenName = document.getElementById('buyTokenName');
+const dropdownOverlay = document.getElementById('dropdownOverlay');
+const tokenList    = document.getElementById('tokenList');
+const rateInfo     = document.getElementById('rateInfo');
+const rateText     = document.getElementById('rateText');
+const swapDetails  = document.getElementById('swapDetails');
+const priceWarning = document.getElementById('priceWarning');
+const sellUsd      = document.getElementById('sellUsd');
+const buyUsd       = document.getElementById('buyUsd');
+const minReceived  = document.getElementById('minReceived');
+const routeText    = document.getElementById('routeText');
+
+// ─── RENDER ICONS ─────────────────────────────────────────────────
+function setIcon(wrap, sym) {
+    wrap.innerHTML = ICONS[sym] || `<svg viewBox="0 0 38 38"><circle cx="19" cy="19" r="19" fill="#444"/><text x="19" y="23" font-size="10" text-anchor="middle" fill="white" font-family="Arial">${sym[0]}</text></svg>`;
+}
+
+function refreshUI() {
+    setIcon(sellIconWrap, sellToken);
+    setIcon(buyIconWrap, buyToken);
+    sellTokenName.textContent = sellToken;
+    buyTokenName.textContent = buyToken;
+    computeOutput();
+    updateRate();
+}
+
+// ─── RATE ─────────────────────────────────────────────────────────
+function getRate(from, to) {
+    const key = `${from}-${to}`;
+    if (RATES[key]) return RATES[key];
+    const rev = `${to}-${from}`;
+    if (RATES[rev]) return 1 / RATES[rev];
+    return null;
+}
+
+function updateRate() {
+    const rate = getRate(sellToken, buyToken);
+    if (!rate) { rateInfo.style.display = 'none'; return; }
+    rateInfo.style.display = 'flex';
+    if (rate >= 1000) {
+        rateText.textContent = `1 ${sellToken} = ${(rate/1e6).toFixed(3)}M ${buyToken}`;
+    } else if (rate < 0.001) {
+        rateText.textContent = `1 ${sellToken} = ${rate.toExponential(2)} ${buyToken}`;
+    } else {
+        rateText.textContent = `1 ${sellToken} = ${rate.toLocaleString('es', {maximumFractionDigits:6})} ${buyToken}`;
     }
-  } catch(e) {}
-})();
-</script>
+    routeText.textContent = `${sellToken} → ${buyToken} (Uniswap v2)`;
+}
 
+// ─── COMPUTE ──────────────────────────────────────────────────────
+function computeOutput() {
+    const val = parseFloat(inputAmount.value);
+    if (!val || val <= 0) {
+        outputAmount.value = '';
+        sellUsd.textContent = '$0.00';
+        buyUsd.textContent = '$0.00';
+        swapDetails.classList.remove('visible');
+        priceWarning.classList.remove('visible');
+        if (!walletConnected) {
+            actionBtn.className = 'btn-action connect';
+            actionBtn.textContent = 'Conectar billetera';
+        } else {
+            actionBtn.className = 'btn-action';
+            actionBtn.textContent = 'Ingresar un monto';
+        }
+        return;
+    }
+
+    const rate = getRate(sellToken, buyToken);
+    if (!rate) {
+        outputAmount.value = '—';
+        return;
+    }
+
+    const out = val * rate;
+    if (out >= 1e9) {
+        outputAmount.value = (out/1e9).toFixed(3) + 'B';
+    } else if (out >= 1e6) {
+        outputAmount.value = (out/1e6).toFixed(3) + 'M';
+    } else {
+        outputAmount.value = out.toLocaleString('es', {maximumFractionDigits: 6});
+    }
+
+    // USD estimates
+    const usdRates = { USDT:1, USDC:1, POL:0.094, WETH:2450, ROXs:0.0000000195 };
+    const inUsd = (val * (usdRates[sellToken]||0)).toFixed(2);
+    const outUsd = (out * (usdRates[buyToken]||0)).toFixed(2);
+    sellUsd.textContent = `$${inUsd}`;
+    buyUsd.textContent = `$${outUsd}`;
+    minReceived.textContent = out >= 1e6 ? `${(out*0.995/1e6).toFixed(3)}M ${buyToken}` : `${(out*0.995).toLocaleString('es',{maximumFractionDigits:4})} ${buyToken}`;
+
+    swapDetails.classList.add('visible');
+    priceWarning.classList.add('visible');
+
+    if (!walletConnected) {
+        actionBtn.className = 'btn-action connect';
+        actionBtn.textContent = 'Conectar billetera';
+    } else {
+        actionBtn.className = 'btn-action active';
+        actionBtn.textContent = 'Intercambiar';
+    }
+}
+
+// ─── EVENTS ───────────────────────────────────────────────────────
+inputAmount.addEventListener('input', computeOutput);
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+    });
+});
+
+// Swap direction
+document.getElementById('swapDirectionBtn').addEventListener('click', () => {
+    [sellToken, buyToken] = [buyToken, sellToken];
+    const inVal = inputAmount.value;
+    inputAmount.value = outputAmount.value.replace(/[MBK,]/g,'') || '';
+    refreshUI();
+});
+
+// Token selectors
+document.getElementById('sellTokenBtn').addEventListener('click', () => openDropdown('sell'));
+document.getElementById('buyTokenBtn').addEventListener('click', () => openDropdown('buy'));
+
+// Connect wallet
+document.getElementById('connectBtn').addEventListener('click', connectWallet);
+actionBtn.addEventListener('click', () => {
+    if (!walletConnected) connectWallet();
+    else if (actionBtn.classList.contains('active')) alert('Swap ejecutado (simulación)');
+});
+
+function connectWallet() {
+    walletConnected = true;
+    const btn = document.getElementById('connectBtn');
+    btn.textContent = '0x94C...D05E';
+    btn.classList.add('connected');
+    computeOutput();
+}
+
+// ─── DROPDOWN ─────────────────────────────────────────────────────
+function openDropdown(side) {
+    selectingFor = side;
+    renderTokenList('');
+    dropdownOverlay.classList.add('visible');
+    document.getElementById('tokenSearch').value = '';
+    document.getElementById('tokenSearch').focus();
+}
+
+document.getElementById('closeDropdown').addEventListener('click', () => {
+    dropdownOverlay.classList.remove('visible');
+});
+dropdownOverlay.addEventListener('click', (e) => {
+    if (e.target === dropdownOverlay) dropdownOverlay.classList.remove('visible');
+});
+document.getElementById('tokenSearch').addEventListener('input', e => renderTokenList(e.target.value));
+
+function renderTokenList(filter) {
+    const f = filter.toLowerCase();
+    tokenList.innerHTML = TOKENS
+        .filter(t => t.sym.toLowerCase().includes(f) || t.name.toLowerCase().includes(f))
+        .map(t => `
+            <div class="token-item" onclick="selectToken('${t.sym}')">
+                <div class="token-item-icon">${ICONS[t.sym]||''}</div>
+                <div class="token-item-info">
+                    <div class="token-item-name">${t.sym}</div>
+                    <div class="token-item-full">${t.name}</div>
+                </div>
+                <div class="token-item-bal">${t.bal}</div>
+            </div>
+        `).join('');
+}
+
+function selectToken(sym) {
+    if (selectingFor === 'sell') {
+        if (sym === buyToken) buyToken = sellToken;
+        sellToken = sym;
+    } else {
+        if (sym === sellToken) sellToken = buyToken;
+        buyToken = sym;
+    }
+    dropdownOverlay.classList.remove('visible');
+    inputAmount.value = '';
+    outputAmount.value = '';
+    refreshUI();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────
+refreshUI();
+</script>
 </body>
 </html>
+
 
 
 
