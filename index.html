@@ -502,6 +502,9 @@ document.querySelectorAll('.section,.card,.tknm-item').forEach(el=>{
   el.style.transition='opacity .6s ease, transform .6s ease';
   obs.observe(el);
 });
+
+</script>
+
 <button id="topBtn">↑</button>
 
 <style>
@@ -509,42 +512,47 @@ document.querySelectorAll('.section,.card,.tknm-item').forEach(el=>{
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 45px;
-  height: 45px;
+  width: 50px;
+  height: 50px;
   border: none;
   border-radius: 50%;
-  background: #111;
+  background: black;
   color: white;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
-  display: none;
   z-index: 9999;
+
+  opacity: 0;
+  visibility: hidden;
+
+  transition: 0.3s;
+}
+
+#topBtn.show {
+  opacity: 1;
+  visibility: visible;
 }
 </style>
 
 <script>
 const topBtn = document.getElementById("topBtn");
 
-window.onscroll = function () {
+window.addEventListener("scroll", () => {
 
-  if (document.body.scrollTop > 300 ||
-      document.documentElement.scrollTop > 300) {
-
-    topBtn.style.display = "block";
-
+  if (window.scrollY > 200) {
+    topBtn.classList.add("show");
   } else {
-
-    topBtn.style.display = "none";
+    topBtn.classList.remove("show");
   }
-};
 
-topBtn.onclick = function () {
+});
+
+topBtn.addEventListener("click", () => {
+
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
-};
-</script>
 
-</body>
-</html>
+});
+</script>
