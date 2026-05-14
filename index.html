@@ -279,11 +279,22 @@ footer {
     <a href="https://t.me/ROXsCoinOfficial">Telegram</a>
     <a href="mailto:roxscoinofficial@proton.me">Email</a>
   </div>
-<div style="text-align:center; margin-top: 16px;">
-  <span style="color:#aaa; font-size:13px; font-family:monospace;">👁 Visits:</span>
-  <img src="https://roxscoin.goatcounter.com/counter/roxscoinofficial.github.io.svg?style=flat" 
-       style="vertical-align:middle; margin-left:6px;" />
+<div style="text-align:center; margin-top:16px;">
+  <span style="color:#aaa; font-size:13px; font-family:monospace;">
+    👁 Visits: <span id="visits">0</span>
+  </span>
 </div>
+
+<script>
+fetch('https://api.countapi.xyz/hit/roxscoinofficial/visits')
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById('visits').innerText = data.value;
+  })
+  .catch(() => {
+    document.getElementById('visits').innerText = '--';
+  });
+</script>
   <div class="hero-glow">
     <img src="logo.png" alt="ROXs Coin" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
     <span class="fallback-icon" style="display:none">🪙</span>
@@ -499,7 +510,5 @@ document.querySelectorAll('.section,.card,.tknm-item').forEach(el=>{
   obs.observe(el);
 });
 </script>
-<script data-goatcounter="https://roxscoin.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
