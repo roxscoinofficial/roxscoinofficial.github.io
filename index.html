@@ -286,21 +286,26 @@ footer {
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", async () => {
+async function updateCounter() {
   try {
+    const namespace = "roxscoin";
+    const key = "homepage";
+
     const response = await fetch(
-      "https://api.countapi.xyz/hit/roxscoinofficial.github.io/visits"
+      `https://api.countapi.xyz/hit/${namespace}/${key}`
     );
 
     const data = await response.json();
 
-    document.getElementById("visits").textContent = data.value;
-  } catch (error) {
-    console.error(error);
+    document.getElementById("visits").innerText = data.value;
+  } catch (err) {
+    console.log(err);
 
-    document.getElementById("visits").textContent = "0";
+    document.getElementById("visits").innerText = "Offline";
   }
-});
+}
+
+updateCounter();
 </script>
   <div class="hero-glow">
     <img src="logo.png" alt="ROXs Coin" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
