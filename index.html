@@ -502,6 +502,50 @@ document.querySelectorAll('.section,.card,.tknm-item').forEach(el=>{
   el.style.transition='opacity .6s ease, transform .6s ease';
   obs.observe(el);
 });
+<button id="topBtn">↑</button>
+
+<style>
+#topBtn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 45px;
+  height: 45px;
+  border: none;
+  border-radius: 50%;
+  background: #111;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: none;
+  z-index: 9999;
+}
+</style>
+
+<script>
+const topBtn = document.getElementById("topBtn");
+
+window.onscroll = function () {
+
+  if (document.body.scrollTop > 300 ||
+      document.documentElement.scrollTop > 300) {
+
+    topBtn.style.display = "block";
+
+  } else {
+
+    topBtn.style.display = "none";
+  }
+};
+
+topBtn.onclick = function () {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+};
+</script>
+
 </script>
 </body>
 </html>
