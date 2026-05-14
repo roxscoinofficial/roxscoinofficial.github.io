@@ -280,33 +280,13 @@ footer {
     <a href="mailto:roxscoinofficial@proton.me">Email</a>
   </div>
 <div style="text-align:center; margin-top:16px;">
-  <span style="color:#aaa; font-size:13px; font-family:monospace;">
-    👁 Visits: <span id="visits">Loading...</span>
-  </span>
+  <img
+    src="https://hitwebcounter.com/counter/counter.php?page=20853389&style=0006&nbdigits=5&type=page&initCount=0"
+    title="Visits"
+    Alt="Visits"
+    border="0"
+  />
 </div>
-
-<script>
-async function updateCounter() {
-  try {
-    const namespace = "roxscoin";
-    const key = "homepage";
-
-    const response = await fetch(
-      `https://api.countapi.xyz/hit/${namespace}/${key}`
-    );
-
-    const data = await response.json();
-
-    document.getElementById("visits").innerText = data.value;
-  } catch (err) {
-    console.log(err);
-
-    document.getElementById("visits").innerText = "Offline";
-  }
-}
-
-updateCounter();
-</script>
   <div class="hero-glow">
     <img src="logo.png" alt="ROXs Coin" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
     <span class="fallback-icon" style="display:none">🪙</span>
